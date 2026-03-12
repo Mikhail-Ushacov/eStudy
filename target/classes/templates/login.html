@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Вхід - LMS</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .login-container { max-width: 400px; margin: 100px auto; }
-    </style>
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="login-container card">
-        <h2>Авторизація в системі</h2>
-        <div th:if="${param.error}" style="color: red;">Невірний логін або пароль!</div>
+    <div style="margin: 50px auto; width: 300px; padding: 20px; border: 1px solid #ccc;">
+        <h2>Academic System Login</h2>
+        
+        <div th:if="${param.error}" style="color: red; margin-bottom: 10px;">
+            Invalid username or password.
+        </div>
+
         <form th:action="@{/login}" method="post">
-            <div style="margin-bottom: 1rem;">
-                <label>Логін:</label><br>
-                <input type="text" name="username" required style="width: 100%; padding: 8px;">
+            <div>
+                <label>Username:</label>
+                <input type="text" name="username" required style="width: 100%"/>
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label>Пароль:</label><br>
-                <input type="password" name="password" required style="width: 100%; padding: 8px;">
+            <div style="margin-top: 10px;">
+                <label>Password:</label>
+                <input type="password" name="password" required style="width: 100%"/>
             </div>
-            <button type="submit" class="btn" style="width: 100%;">Увійти</button>
+            <div style="margin-top: 20px;">
+                <button type="submit" style="width: 100%">Login</button>
+            </div>
         </form>
     </div>
 </body>

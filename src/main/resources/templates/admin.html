@@ -1,0 +1,17 @@
+<h1>Адмін-панель</h1>
+<table>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.username}"></td>
+        <td>
+            <form th:action="@{/admin/user/update-role}" method="post">
+                <input type="hidden" name="userId" th:value="${user.id}">
+                <select name="role">
+                    <option th:selected="${user.role == 'ROLE_STUDENT'}" value="ROLE_STUDENT">STUDENT</option>
+                    <option th:selected="${user.role == 'ROLE_TEACHER'}" value="ROLE_TEACHER">TEACHER</option>
+                    <option th:selected="${user.role == 'ROLE_ADMIN'}" value="ROLE_ADMIN">ADMIN</option>
+                </select>
+                <button type="submit">Змінити роль</button>
+            </form>
+        </td>
+    </tr>
+</table>

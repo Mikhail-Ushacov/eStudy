@@ -1,7 +1,0 @@
-<h3>Фінальний тест</h3>
-<div th:if="${canTakeFinal}">
-    <a th:href="@{'/test/' + ${finalTest.id}}" class="btn">Пройти фінальний тест</a>
-</div>
-<div th:unless="${canTakeFinal}">
-    <p style="color: gray;">Фінальний тест стане доступним після здачі всіх проміжних тестів.</p>
-</div>

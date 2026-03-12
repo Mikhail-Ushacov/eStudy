@@ -1,0 +1,56 @@
+package com.university.system.controller;
+
+import com.university.system.model.Result;
+import com.university.system.model.Test;
+import com.university.system.model.User;
+import com.university.system.repository.QuestionRepository;
+import com.university.system.repository.ResultRepository;
+import com.university.system.repository.TestRepository;
+import com.university.system.repository.UserRepository;
+import com.university.system.service.TestService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
+// import java.util.List; // Додано
+import java.util.Map;  // Додано
+
+@Controller
+@RequestMapping("/tests")
+public class TestController {
+    @Autowired private TestRepository testRepo;
+    @Autowired private QuestionRepository questionRepo;
+    @Autowired private TestService testService;
+    @Autowired private ResultRepository resultRepo;
+    @Autowired private UserRepository userRepo;
+
+    @GetMapping("/{id}")
+    public String viewTest(@PathVariable Long id, Model model, Principal principal) {
+        Test test = testRepo.findById(id).orElseThrow();
+        User user = userRepo.findByUsername(principal.getName());
+        
+        if (test.isFinal() && !testService.canTakeFinalTest(user.getId(), test.getCourse().getId())) {
+            return "redirect:/courses?error=final_locked";
+        }
+        
+        model.addAttribute("test", test);
+        model.addAttribute("questions", questionRepo.findByTestId(id));
+        return "test";
+    }
+
+    @PostMapping("/{id}/submit")
+    public String submit(@PathVariable Long id, @RequestParam Map<String, String> params, Principal principal) {
+        User user = userRepo.findByUsername(principal.getName());
+        Test test = testRepo.findById(id).orElseThrow();
+        int score = testService.calculateScore(id, params);
+
+        Result result = new Result();
+        result.setStudent(user);
+        result.setTest(test);
+        result.setScore(score);
+        resultRepo.save(result); // Тепер save буде працювати
+
+        return "redirect:/student/dashboard";
+    }
+}
