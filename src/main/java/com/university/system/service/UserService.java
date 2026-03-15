@@ -20,17 +20,23 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
+        
         if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+            throw new UsernameNotFoundException("User not found: " + username);
         }
 
-        // Додаємо префікс ROLE_, якщо його немає в базі даних
-        String roleName = user.getRole().startsWith("ROLE_") ? user.getRole() : "ROLE_" + user.getRole();
+        // Перевіряємо, чи є префікс ROLE_. Якщо немає — додаємо.
+        String roleName = user.getRole();
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+
+        System.out.println("DEBUG: User " + username + " logined with authority: " + roleName);
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(roleName)) // Важливо!
+                Collections.singletonList(new SimpleGrantedAuthority(roleName))
         );
     }
 

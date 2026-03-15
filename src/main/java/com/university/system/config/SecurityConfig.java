@@ -27,14 +27,20 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .successHandler((request, response, authentication) -> {
-                    var roles = authentication.getAuthorities();
-                    // Перевіряємо повні імена ролей з ROLE_
-                    if (roles.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                    var roles = authentication.getAuthorities().stream()
+                                                .map(r -> r.getAuthority())
+                                                .toList();
+                    
+                    System.out.println("DEBUG: Success login. Roles: " + roles);
+
+                    if (roles.contains("ROLE_ADMIN")) {
                         response.sendRedirect("/admin/dashboard");
-                    } else if (roles.stream().anyMatch(a -> a.getAuthority().equals("ROLE_TEACHER"))) {
+                    } else if (roles.contains("ROLE_TEACHER")) {
                         response.sendRedirect("/teacher/dashboard");
-                    } else {
+                    } else if (roles.contains("ROLE_STUDENT")) {
                         response.sendRedirect("/student/dashboard");
+                    } else {
+                        response.sendRedirect("/courses");
                     }
                 })
                 .permitAll()

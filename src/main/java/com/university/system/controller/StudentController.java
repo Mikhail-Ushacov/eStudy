@@ -18,12 +18,15 @@ public class StudentController {
     @Autowired private EnrollmentRepository enrollmentRepo;
     @Autowired private UserRepository userRepo;
 
-    @GetMapping("/dashboard")
+    @GetMapping("/dashboard") // Має відповідати URL у SuccessHandler
     public String dashboard(Model model, Principal principal) {
+        if (principal == null) return "redirect:/login";
+        
         User student = userRepo.findByUsername(principal.getName());
         model.addAttribute("enrollments", enrollmentRepo.findByStudentId(student.getId()));
         model.addAttribute("availableCourses", courseService.getAllCourses());
-        return "student";
+        
+        return "student"; // Переконайтеся, що файл src/main/resources/templates/student.html існує
     }
 
     @PostMapping("/enroll")
