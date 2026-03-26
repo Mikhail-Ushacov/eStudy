@@ -15,7 +15,7 @@ public class Enrollment {
     @ManyToOne
     private Course course;
 
-    private int progress = 0; // % або кількість пройдених тестів
+    private int progress = 0;
 
     public int getProgress() { return progress; }
     public void setProgress(int progress) { this.progress = progress; }

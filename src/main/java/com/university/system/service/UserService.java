@@ -25,7 +25,6 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found: " + username);
         }
 
-        // Перевіряємо, чи є префікс ROLE_. Якщо немає — додаємо.
         String roleName = user.getRole();
         if (!roleName.startsWith("ROLE_")) {
             roleName = "ROLE_" + roleName;

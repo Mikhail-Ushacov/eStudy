@@ -6,14 +6,14 @@
 
 <body>
 
-<h1>Courses</h1>
+<h1>Курси</h1>
 
 <div th:each="course : ${courses}">
 
 <h3 th:text="${course.name}"></h3>
 
 <a th:href="@{/courses/{id}(id=${course.id})}">
-Open
+Відкрити
 </a>
 
 </div>

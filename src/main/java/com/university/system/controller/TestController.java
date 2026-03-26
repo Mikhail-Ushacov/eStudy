@@ -13,8 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
-// import java.util.List; // Додано
-import java.util.Map;  // Додано
+import java.util.Map;
 
 @Controller
 @RequestMapping("/tests")
@@ -49,7 +48,7 @@ public class TestController {
         result.setStudent(user);
         result.setTest(test);
         result.setScore(score);
-        resultRepo.save(result); // Тепер save буде працювати
+        resultRepo.save(result);
 
         return "redirect:/student/dashboard";
     }

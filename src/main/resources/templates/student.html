@@ -2,7 +2,7 @@
     <h2>Ваші курси</h2>
     <div th:each="enroll : ${enrollments}">
         <p th:text="${enroll.course.name}"></p>
-        <a th:href="@{/courses/{id}(id=${enroll.course.id})}" class="btn">Перейти</a>
+        <a th:href="@{/courses/{id}(id=${enroll.course.id})}" class="btn">Перейти до курсу</a>
     </div>
 
     <hr>
