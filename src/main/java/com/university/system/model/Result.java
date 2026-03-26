@@ -9,10 +9,12 @@ public class Result {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
+    @JoinColumn(name = "student_id")   // Added JoinColumn explicitly
     private User student;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
+    @JoinColumn(name = "test_id")      // Added JoinColumn explicitly
     private Test test;
 
     private int score;

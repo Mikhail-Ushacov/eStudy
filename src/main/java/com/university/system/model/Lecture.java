@@ -10,9 +10,10 @@ public class Lecture {
     private Long id;
 
     private String title;
-    private String filePath;
+    private String filePath; // Path to the lecture content (e.g., HTML file, PDF link)
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
+    @JoinColumn(name = "course_id")   // Added JoinColumn explicitly
     private Course course;
 
     // Getters and Setters

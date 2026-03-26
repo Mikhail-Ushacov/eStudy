@@ -9,4 +9,5 @@ import java.util.List;
 public interface ResultRepository extends JpaRepository<Result, Long> {
     List<Result> findByStudentIdAndTestCourseId(Long studentId, Long courseId);
     boolean existsByStudentIdAndTestId(Long studentId, Long testId);
+    List<Result> findByStudentId(Long studentId); // Added for student dashboard
 }

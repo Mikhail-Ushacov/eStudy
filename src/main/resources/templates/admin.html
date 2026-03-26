@@ -1,17 +1,80 @@
-<h1>Панель адміністратора</h1>
-<table>
-    <tr th:each="user : ${users}">
-        <td th:text="${user.username}"></td>
-        <td>
-            <form th:action="@{/admin/user/update-role}" method="post">
-                <input type="hidden" name="userId" th:value="${user.id}">
-                <select name="role">
-                    <option th:selected="${user.role == 'ROLE_STUDENT'}" value="ROLE_STUDENT">СТУДЕНТ</option>
-                    <option th:selected="${user.role == 'ROLE_TEACHER'}" value="ROLE_TEACHER">ВИКЛАДАЧ</option>
-                    <option th:selected="${user.role == 'ROLE_ADMIN'}" value="ROLE_ADMIN">АДМІН</option>
-                </select>
-                <button type="submit">Змінити роль</button>
-            </form>
-        </td>
-    </tr>
-</table>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Панель адміністратора - eStudy</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Панель адміністратора</h1>
+
+        <nav>
+            <a href="/admin/dashboard">Головна</a>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <h2 class="section-title">Керування користувачами</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ім'я користувача</th>
+                    <th>Роль</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.username}"></td>
+                    <td>
+                        <form th:action="@{/admin/user/update-role}" method="post" style="display:inline-block;">
+                            <input type="hidden" name="userId" th:value="${user.id}">
+                            <select name="role">
+                                <option value="STUDENT" th:selected="${user.role == 'STUDENT'}">СТУДЕНТ</option>
+                                <option value="TEACHER" th:selected="${user.role == 'TEACHER'}">ВИКЛАДАЧ</option>
+                                <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">АДМІН</option>
+                            </select>
+                            <button type="submit" class="small-btn">Змінити роль</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form th:action="@{/admin/user/delete/{id}(id=${user.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цього користувача?');" style="display:inline-block;">
+                            <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Керування курсами</h2>
+        <a href="/admin/course/add" class="btn">Додати новий курс</a>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Назва курсу</th>
+                    <th>Опис</th>
+                    <th>Викладач</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="course : ${courses}">
+                    <td th:text="${course.id}"></td>
+                    <td th:text="${course.name}"></td>
+                    <td th:text="${course.description}"></td>
+                    <td th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></td>
+                    <td>
+                        <a th:href="@{/admin/course/edit/{id}(id=${course.id})}" class="btn small-btn">Редагувати</a>
+                        <form th:action="@{/admin/course/delete/{id}(id=${course.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей курс? Це також видалить усі пов\'язані лекції, тести та результати.');" style="display:inline-block;">
+                            <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

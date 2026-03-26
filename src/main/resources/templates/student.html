@@ -1,15 +1,72 @@
-<div class="container">
-    <h2>Ваші курси</h2>
-    <div th:each="enroll : ${enrollments}">
-        <p th:text="${enroll.course.name}"></p>
-        <a th:href="@{/courses/{id}(id=${enroll.course.id})}" class="btn">Перейти до курсу</a>
-    </div>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Кабінет студента - eStudy</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Ласкаво просимо, <span th:text="${student.username}"></span>!</h1>
 
-    <hr>
-    <h2>Доступні курси (Запис)</h2>
-    <form th:action="@{/student/enroll}" method="post" th:each="course : ${availableCourses}">
-        <input type="hidden" name="courseId" th:value="${course.id}">
-        <span th:text="${course.name}"></span>
-        <button type="submit">Записатися</button>
-    </form>
-</div>
+        <nav>
+            <a href="/">Головна</a>
+            <a href="/student/dashboard">Мій кабінет</a>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <hr>
+
+        <h2 class="section-title">Ваші курси</h2>
+        <div th:if="${enrollments.isEmpty()}">
+            <p>Ви ще не записані на жоден курс.</p>
+        </div>
+        <div th:each="enroll : ${enrollments}" class="course-item">
+            <div class="course-details">
+                <h3 th:text="${enroll.course.name}"></h3>
+                <p>Прогрес: <span th:text="${enroll.progress}"></span>% (у розробці)</p>
+            </div>
+            <div class="course-actions">
+                <a th:href="@{/student/course/{id}(id=${enroll.course.id})}" class="btn">Перейти до курсу</a>
+            </div>
+        </div>
+
+        <h2 class="section-title">Доступні курси (Запис)</h2>
+        <div th:if="${availableCourses.isEmpty()}">
+            <p>Наразі немає доступних курсів для запису.</p>
+        </div>
+        <div th:each="course : ${availableCourses}" class="course-item">
+            <div class="course-details">
+                <h3 th:text="${course.name}"></h3>
+                <p th:text="${course.description}"></p>
+            </div>
+            <div class="course-actions">
+                <form th:action="@{/student/enroll}" method="post">
+                    <input type="hidden" name="courseId" th:value="${course.id}">
+                    <button type="submit" class="btn">Записатися</button>
+                </form>
+            </div>
+        </div>
+
+        <h2 class="section-title">Ваші результати тестування</h2>
+        <div th:if="${results.isEmpty()}">
+            <p>У вас ще немає результатів тестів.</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Курс</th>
+                    <th>Тест</th>
+                    <th>Оцінка</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="result : ${results}">
+                    <td th:text="${result.test.course.name}"></td>
+                    <td th:text="${result.test.title}"></td>
+                    <td th:text="${result.score}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

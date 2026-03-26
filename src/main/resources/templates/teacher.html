@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Кабінет викладача - eStudy</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Ласкаво просимо, викладачу <span th:text="${teacher.username}"></span>!</h1>
+
+        <nav>
+            <a href="/">Головна</a>
+            <a href="/teacher/dashboard">Мій кабінет</a>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <hr>
+
+        <h2 class="section-title">Мої курси</h2>
+        <a href="/teacher/course/add" class="btn">Створити новий курс</a>
+
+        <div th:if="${courses.isEmpty()}">
+            <p>Ви ще не створили жодного курсу.</p>
+        </div>
+
+        <div th:each="course : ${courses}" class="course-item">
+            <div>
+                <h3 th:text="${course.name}"></h3>
+                <p th:text="${course.description}"></p>
+            </div>
+            <div class="course-actions">
+                <a th:href="@{/teacher/course/{id}(id=${course.id})}" class="btn">Управляти курсом</a>
+                <a th:href="@{/teacher/course/edit/{id}(id=${course.id})}" class="btn small-btn">Редагувати</a>
+                <form th:action="@{/teacher/course/delete/{id}(id=${course.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей курс? Це також видалить усі пов\'язані лекції, тести та результати.');" style="display:inline-block;">
+                    <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.university.system.model;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 public class Test {
@@ -11,8 +12,14 @@ public class Test {
 
     private String title;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
+    @JoinColumn(name = "course_id")   // Added JoinColumn explicitly
     private Course course;
+
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Question> questions;
+
+    private boolean isFinal = false; // Indicates if this is the final test for the course
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -22,7 +29,9 @@ public class Test {
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
     
-    private boolean isFinal = false;
     public boolean isFinal() { return isFinal; }
     public void setFinal(boolean aFinal) { isFinal = aFinal; }
+
+    public List<Question> getQuestions() { return questions; }
+    public void setQuestions(List<Question> questions) { this.questions = questions; }
 }

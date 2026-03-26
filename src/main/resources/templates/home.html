@@ -1,22 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-<link rel="stylesheet" href="/css/style.css">
+    <title>Головна - eStudy</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
+    <div class="container">
+        <h1>Ласкаво просимо до eStudy!</h1>
 
-<h1>Курси</h1>
+        <nav>
+            <a href="/">Головна</a>
+            <span sec:authorize="!isAuthenticated()"><a href="/login">Вхід</a></span>
+            <span sec:authorize="!isAuthenticated()"><a href="/register">Реєстрація</a></span>
+            <span sec:authorize="hasRole('STUDENT')"><a href="/student/dashboard">Мій кабінет студента</a></span>
+            <span sec:authorize="hasRole('TEACHER')"><a href="/teacher/dashboard">Мій кабінет викладача</a></span>
+            <span sec:authorize="hasRole('ADMIN')"><a href="/admin/dashboard">Панель адміністратора</a></span>
+            <span sec:authorize="isAuthenticated()"><a href="/logout">Вийти</a></span>
+        </nav>
 
-<div th:each="course : ${courses}">
+        <h2 class="section-title">Доступні курси</h2>
 
-<h3 th:text="${course.name}"></h3>
+        <div th:if="${courses.isEmpty()}">
+            <p>Наразі немає доступних курсів.</p>
+        </div>
 
-<a th:href="@{/courses/{id}(id=${course.id})}">
-Відкрити
-</a>
-
-</div>
-
+        <div th:each="course : ${courses}" class="course-item">
+            <div>
+                <h3 th:text="${course.name}"></h3>
+                <p th:text="${course.description}"></p>
+                <p><strong>Викладач:</strong> <span th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></span></p>
+            </div>
+            <div class="course-actions">
+                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn">Детальніше</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

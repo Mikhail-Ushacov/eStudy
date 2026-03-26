@@ -9,13 +9,15 @@ public class Enrollment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
+    @JoinColumn(name = "student_id")   // Added JoinColumn explicitly
     private User student;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
+    @JoinColumn(name = "course_id")    // Added JoinColumn explicitly
     private Course course;
 
-    private int progress = 0;
+    private int progress = 0; // Not actively used in this version but kept for future
 
     public int getProgress() { return progress; }
     public void setProgress(int progress) { this.progress = progress; }

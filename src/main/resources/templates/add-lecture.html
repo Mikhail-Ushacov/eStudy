@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Додати лекцію</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Додати нову лекцію для курсу: <span th:text="${lecture.course.name}"></span></h1>
+
+        <form th:action="@{/lectures/add/{courseId}(courseId=${lecture.course.id})}" th:object="${lecture}" method="post">
+            <div class="form-group">
+                <label for="title">Назва лекції:</label>
+                <input type="text" id="title" th:field="*{title}" required />
+            </div>
+
+            <div class="form-group">
+                <label for="filePath">Шлях до файлу лекції (наприклад, /lectures/my-first-lecture.html):</label>
+                <input type="text" id="filePath" th:field="*{filePath}" required />
+            </div>
+
+            <button type="submit">Додати лекцію</button>
+            <a th:href="@{/teacher/course/{courseId}(courseId=${lecture.course.id})}" class="btn">Скасувати</a>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Додати тест</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Додати новий тест до курсу: <span th:text="${test.course.name}"></span></h1>
+
+        <form th:action="@{/teacher/course/{courseId}/test/add(courseId=${test.course.id})}" th:object="${test}" method="post">
+            <div class="form-group">
+                <label for="title">Назва тесту:</label>
+                <input type="text" id="title" th:field="*{title}" required />
+            </div>
+
+            <div class="form-group">
+                <label for="isFinal">Це підсумковий тест?</label>
+                <input type="checkbox" id="isFinal" th:field="*{isFinal}" />
+                <small>Підсумковий тест буде доступний лише після проходження всіх інших тестів курсу.</small>
+            </div>
+
+            <button type="submit">Додати тест</button>
+            <a th:href="@{/teacher/course/{courseId}(courseId=${test.course.id})}" class="btn">Скасувати</a>
+        </form>
+    </div>
+</body>
+</html>

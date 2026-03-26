@@ -1,10 +1,58 @@
-<form th:action="@{/tests/{id}/submit(id=${test.id})}" method="post">
-    <div th:each="q : ${questions}">
-        <p th:text="${q.question}"></p>
-        <input type="radio" th:name="'q'+${q.id}" value="A" th:text="${q.optionA}">
-        <input type="radio" th:name="'q'+${q.id}" value="B" th:text="${q.optionB}">
-        <input type="radio" th:name="'q'+${q.id}" value="C" th:text="${q.optionC}">
-        <input type="radio" th:name="'q'+${q.id}" value="D" th:text="${q.optionD}">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title th:text="${test.title}"></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${test.title}"></h1>
+        <p><strong>Курс:</strong> <a th:href="@{/courses/{id}(id=${test.course.id})}" th:text="${test.course.name}"></a></p>
+
+        <nav>
+            <a href="/">Головна</a>
+            <a th:href="@{/courses/{id}(id=${test.course.id})}">Повернутися до курсу</a>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <hr>
+        
+        <div th:if="${param.error}" class="alert-error">
+            <span th:text="${param.error}"></span>
+        </div>
+
+        <form th:action="@{/tests/{id}/submit(id=${test.id})}" method="post">
+            <div th:if="${questions.isEmpty()}">
+                <p>У цьому тесті ще немає питань.</p>
+                <span sec:authorize="hasRole('TEACHER')">
+                     <a th:href="@{/teacher/test/{testId}/question/add(testId=${test.id})}" class="btn">Додати питання</a>
+                </span>
+            </div>
+
+            <div th:each="q, stat : ${questions}" class="form-group" style="background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 20px;">
+                <p style="font-weight: bold;">[[${stat.index + 1}]]. <span th:text="${q.question}"></span> (<span th:text="${q.points}"></span> балів)</p>
+                <label style="display: block; margin-bottom: 8px;">
+                    <input type="radio" th:name="'q'+${q.id}" value="A" required />
+                    <span th:text="${q.optionA}"></span>
+                </label>
+                <label style="display: block; margin-bottom: 8px;">
+                    <input type="radio" th:name="'q'+${q.id}" value="B" required />
+                    <span th:text="${q.optionB}"></span>
+                </label>
+                <label style="display: block; margin-bottom: 8px;">
+                    <input type="radio" th:name="'q'+${q.id}" value="C" required />
+                    <span th:text="${q.optionC}"></span>
+                </label>
+                <label style="display: block; margin-bottom: 8px;">
+                    <input type="radio" th:name="'q'+${q.id}" value="D" required />
+                    <span th:text="${q.optionD}"></span>
+                </label>
+            </div>
+            
+            <div th:if="${!questions.isEmpty()}">
+                <button type="submit" class="btn">Надіслати тест</button>
+            </div>
+        </form>
     </div>
-    <button type="submit">Надіслати тест</button>
-</form>
+</body>
+</html>

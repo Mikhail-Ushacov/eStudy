@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${course.id == null ? 'Додати курс' : 'Редагувати курс'}"></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${course.id == null ? 'Додати новий курс' : 'Редагувати курс'}"></h1>
+
+        <form th:action="${course.id == null ? '/admin/course/add' : '/admin/course/edit/' + course.id}" th:object="${course}" method="post">
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="form-group">
+                <label for="name">Назва курсу:</label>
+                <input type="text" id="name" th:field="*{name}" required />
+            </div>
+
+            <div class="form-group">
+                <label for="description">Опис:</label>
+                <textarea id="description" th:field="*{description}" rows="5"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="teacher">Викладач:</label>
+                <select id="teacher" name="teacherId" required>
+                    <option value="">Оберіть викладача</option>
+                    <option th:each="teacher : ${teachers}"
+                            th:value="${teacher.id}"
+                            th:text="${teacher.username}"
+                            th:selected="${course.teacher != null and course.teacher.id == teacher.id}">
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" th:text="${course.id == null ? 'Додати курс' : 'Зберегти зміни'}"></button>
+            <a href="/admin/dashboard" class="btn">Скасувати</a>
+        </form>
+    </div>
+</body>
+</html>

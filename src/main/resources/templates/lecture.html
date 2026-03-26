@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${lecture.title}"></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${lecture.title}"></h1>
+        <p><strong>Курс:</strong> <a th:href="@{/courses/{id}(id=${lecture.course.id})}" th:text="${lecture.course.name}"></a></p>
+
+        <nav>
+            <a href="/">Головна</a>
+            <a th:href="@{/courses/{id}(id=${lecture.course.id})}">Повернутися до курсу</a>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <hr>
+
+        <div th:if="${lecture.filePath != null and !lecture.filePath.isEmpty()}">
+            <!-- Attempt to load content from a relative path. This assumes static files or a dedicated controller for lecture content -->
+            <!-- For example, if filePath is "/static/lectures/intro.html", Thymeleaf will resolve it as a URL -->
+            <!-- If it's an external URL, it will also work -->
+            <p>Завантаження матеріалів лекції...</p>
+            <iframe th:src="${lecture.filePath}" style="width:100%; height:600px; border:1px solid #ccc;"></iframe>
+            <p>Якщо вміст не відображається вище, спробуйте відкрити його за посиланням: <a th:href="${lecture.filePath}" target="_blank" th:text="${lecture.filePath}"></a></p>
+        </div>
+        <div th:unless="${lecture.filePath != null and !lecture.filePath.isEmpty()}">
+            <p>Немає доступних матеріалів для цієї лекції.</p>
+        </div>
+    </div>
+</body>
+</html>
