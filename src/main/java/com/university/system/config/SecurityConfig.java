@@ -55,17 +55,3 @@ public class SecurityConfig {
         return NoOpPasswordEncoder.getInstance();
     }
 }
-                })
-                .permitAll()
-            )
-            .logout(logout -> logout.permitAll());
-
-        return http.build();
-    }
-
-    @Bean
-    @SuppressWarnings("deprecation") // Додано
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-    }
-}
