@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "AcademicSystemApplication",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.university.system.AcademicSystemApplication",
+            "projectName": "academic-performance-system",
+            "args": [
+                "--spring.profiles.active=local"
+            ]
+        }
+    ]
+}

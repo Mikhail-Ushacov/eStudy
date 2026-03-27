@@ -4,7 +4,6 @@ target/
 # IDE files
 .idea/
 *.iml
-.vscode/
 .project
 .classpath
 .settings/
