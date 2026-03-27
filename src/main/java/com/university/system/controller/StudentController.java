@@ -26,60 +26,66 @@ public class StudentController {
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
         if (principal == null) return "redirect:/login";
-        
+
         User student = userRepo.findByUsername(principal.getName());
+        
+        // ВАЖЛИВО: Додаємо самого студента в модель, щоб працював ${student.username}
         model.addAttribute("student", student);
 
-        // Enrolled courses
-        List<Enrollment> enrollments = enrollmentRepo.findByStudentId(student.getId());
-        model.addAttribute("enrollments", enrollments);
+        // Курси, на які студент вже ПІДТВЕРДЖЕНИЙ
+        List<Enrollment> myConfirmedEnrollments = enrollmentRepo.findByStudentIdAndConfirmed(student.getId(), true);
+        model.addAttribute("enrollments", myConfirmedEnrollments);
 
-        // Available courses (not yet enrolled)
-        List<Long> enrolledCourseIds = enrollments.stream()
-                                                    .map(e -> e.getCourse().getId())
-                                                    .collect(Collectors.toList());
+        // Заявки, які ще чекають на підтвердження
+        List<Enrollment> pendingEnrollments = enrollmentRepo.findByStudentIdAndConfirmed(student.getId(), false);
+        model.addAttribute("pendingEnrollments", pendingEnrollments);
+
+        // Доступні курси (на які ще немає жодної заявки)
+        List<Long> allAppliedCourseIds = enrollmentRepo.findByStudentId(student.getId()).stream()
+                .map(e -> e.getCourse().getId()).collect(Collectors.toList());
         
-        List<com.university.system.model.Course> availableCourses = courseService.getAllCourses().stream()
-                .filter(c -> !enrolledCourseIds.contains(c.getId()))
+        List<Course> availableCourses = courseService.getAllCourses().stream()
+                .filter(c -> !allAppliedCourseIds.contains(c.getId()))
                 .collect(Collectors.toList());
+        
         model.addAttribute("availableCourses", availableCourses);
         
-        // Scores for each enrolled course
+        // Результати тестів
         model.addAttribute("results", resultRepo.findByStudentId(student.getId()));
-
+        
         return "student";
     }
 
-    @PostMapping("/enroll")
+     @PostMapping("/enroll")
     public String enroll(@RequestParam Long courseId, Principal principal) {
         User student = userRepo.findByUsername(principal.getName());
         if (!enrollmentRepo.existsByStudentIdAndCourseId(student.getId(), courseId)) {
             Enrollment e = new Enrollment();
             e.setStudent(student);
             e.setCourse(courseService.getCourseById(courseId).orElse(null));
+            e.setConfirmed(false); // За замовчуванням не підтверджено
             enrollmentRepo.save(e);
         }
         return "redirect:/student/dashboard";
     }
 
-    // New: View specific course for student (similar to CourseController, but might have student-specific info)
     @GetMapping("/course/{courseId}")
     public String viewStudentCourse(@PathVariable Long courseId, Model model, Principal principal) {
         User student = userRepo.findByUsername(principal.getName());
-        Course course = courseService.getCourseById(courseId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + courseId));
-        
-        // Ensure student is enrolled in this course
-        if (!enrollmentRepo.existsByStudentIdAndCourseId(student.getId(), courseId)) {
-            return "redirect:/student/dashboard?error=not_enrolled";
+        // Перевіряємо, чи студент не просто подав заявку, а чи вона ПІДТВЕРДЖЕНА
+        Enrollment enrollment = enrollmentRepo.findByStudentIdAndConfirmed(student.getId(), true).stream()
+                .filter(e -> e.getCourse().getId().equals(courseId))
+                .findFirst()
+                .orElse(null);
+
+        if (enrollment == null) {
+            return "redirect:/student/dashboard?error=access_denied";
         }
 
+        Course course = enrollment.getCourse();
         model.addAttribute("course", course);
-        model.addAttribute("lectures", course.getLectures()); // Assuming LAZY loading is configured correctly or fetched
-        model.addAttribute("tests", course.getTests());       // Assuming LAZY loading is configured correctly or fetched
-        model.addAttribute("student", student);
-        model.addAttribute("results", resultRepo.findByStudentIdAndTestCourseId(student.getId(), courseId));
-
-        return "course"; // Reusing the general course view
+        model.addAttribute("lectures", course.getLectures());
+        model.addAttribute("tests", course.getTests());
+        return "course";
     }
 }

@@ -1,62 +1,81 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title>Кабінет студента - eStudy</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Ласкаво просимо, <span th:text="${student.username}"></span>!</h1>
+        <h1>Вітаємо, <span th:text="${student.username}"></span>!</h1>
 
         <nav>
-            <a href="/">Головна</a>
+            <a href="/home">Головна</a>
             <a href="/student/dashboard">Мій кабінет</a>
             <a href="/logout">Вийти</a>
         </nav>
 
+        <div th:if="${param.error == 'access_denied'}" class="alert-error">
+            Доступ до курсу заборонено. Заявка ще не підтверджена викладачем.
+        </div>
+
         <hr>
 
-        <h2 class="section-title">Ваші курси</h2>
+        <!-- 1. МОЇ ПІДТВЕРДЖЕНІ КУРСИ -->
+        <h2 class="section-title">Моє навчання (Підтверджені курси)</h2>
         <div th:if="${enrollments.isEmpty()}">
-            <p>Ви ще не записані на жоден курс.</p>
+            <p>Ви ще не зараховані на жоден курс.</p>
         </div>
         <div th:each="enroll : ${enrollments}" class="course-item">
             <div class="course-details">
                 <h3 th:text="${enroll.course.name}"></h3>
-                <p>Прогрес: <span th:text="${enroll.progress}"></span>% (у розробці)</p>
+                <p>Викладач: <span th:text="${enroll.course.teacher.username}"></span></p>
             </div>
             <div class="course-actions">
-                <a th:href="@{/student/course/{id}(id=${enroll.course.id})}" class="btn">Перейти до курсу</a>
+                <!-- Пряме посилання на сторінку з лекціями та тестами -->
+                <a th:href="@{/student/course/{id}(id=${enroll.course.id})}" class="btn">Перейти до матеріалів</a>
             </div>
         </div>
 
-        <h2 class="section-title">Доступні курси (Запис)</h2>
+        <!-- 2. ЗАЯВКИ НА РОЗГЛЯДІ -->
+        <div th:if="${pendingEnrollments != null and !pendingEnrollments.isEmpty()}">
+            <h2 class="section-title">Заявки на розгляді</h2>
+            <div th:each="p : ${pendingEnrollments}" class="list-item" style="border-left: 5px solid #f1c40f;">
+                <span th:text="${p.course.name}" class="list-item-title"></span>
+                <span class="small-btn" style="background: #f39c12; cursor: default;">Очікує підтвердження викладачем</span>
+            </div>
+        </div>
+
+        <!-- 3. ДОСТУПНІ КУРСИ ДЛЯ ЗАПИСУ -->
+        <h2 class="section-title">Записатися на новий курс</h2>
         <div th:if="${availableCourses.isEmpty()}">
-            <p>Наразі немає доступних курсів для запису.</p>
+            <p>Наразі немає нових курсів для запису.</p>
         </div>
         <div th:each="course : ${availableCourses}" class="course-item">
             <div class="course-details">
                 <h3 th:text="${course.name}"></h3>
                 <p th:text="${course.description}"></p>
+                <p><strong>Викладач:</strong> <span th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></span></p>
             </div>
             <div class="course-actions">
                 <form th:action="@{/student/enroll}" method="post">
                     <input type="hidden" name="courseId" th:value="${course.id}">
-                    <button type="submit" class="btn">Записатися</button>
+                    <button type="submit" class="btn" style="background-color: #27ae60;">Подати заявку</button>
                 </form>
             </div>
         </div>
 
-        <h2 class="section-title">Ваші результати тестування</h2>
+        <!-- 4. РЕЗУЛЬТАТИ ТЕСТІВ -->
+        <h2 class="section-title">Ваші оцінки</h2>
         <div th:if="${results.isEmpty()}">
-            <p>У вас ще немає результатів тестів.</p>
+            <p>У вас ще немає завершених тестів.</p>
         </div>
-        <table>
+        <table th:unless="${results.isEmpty()}">
             <thead>
                 <tr>
                     <th>Курс</th>
                     <th>Тест</th>
-                    <th>Оцінка</th>
+                    <th>Бали</th>
                 </tr>
             </thead>
             <tbody>

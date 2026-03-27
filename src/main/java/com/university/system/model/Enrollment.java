@@ -9,23 +9,23 @@ public class Enrollment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
-    @JoinColumn(name = "student_id")   // Added JoinColumn explicitly
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
     private User student;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
-    @JoinColumn(name = "course_id")    // Added JoinColumn explicitly
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
     private Course course;
 
-    private int progress = 0; // Not actively used in this version but kept for future
+    private boolean confirmed = false; // Нове поле для підтвердження
 
-    public int getProgress() { return progress; }
-    public void setProgress(int progress) { this.progress = progress; }
-
+    // Геттери та сеттери
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public User getStudent() { return student; }
     public void setStudent(User student) { this.student = student; }
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
+    public boolean isConfirmed() { return confirmed; }
+    public void setConfirmed(boolean confirmed) { this.confirmed = confirmed; }
 }

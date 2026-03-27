@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
+    <meta charset="UTF-8">
     <title th:text="${course.name}"></title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
         <h1 th:text="${course.name}"></h1>
-        <p><strong>Опис:</strong> <span th:text="${course.description}"></span></p>
-        <p><strong>Викладач:</strong> <span th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></span></p>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p th:text="${course.description}"></p>
+            <p><strong>Викладач:</strong> <span th:text="${course.teacher.username}"></span></p>
+        </div>
 
         <nav>
             <a href="/">Головна</a>
@@ -20,70 +24,98 @@
 
         <hr>
 
+        <!-- БЛОК ДЛЯ ВИКЛАДАЧА: ПІДТВЕРДЖЕННЯ ЗАЯВОК -->
         <div sec:authorize="hasRole('TEACHER')">
-            <a th:href="@{/lectures/add/{courseId}(courseId=${course.id})}" class="btn" style="margin-right: 10px;">Додати лекцію</a>
-            <a th:href="@{/teacher/course/{courseId}/test/add(courseId=${course.id})}" class="btn">Додати тест</a>
+            <h2 class="section-title">Заявки на вступ до курсу</h2>
+            <div th:if="${pendingRequests == null or pendingRequests.isEmpty()}">
+                <p style="text-align: center; color: #7f8c8d;">Нових заявок на вступ немає.</p>
+            </div>
+            <table th:if="${pendingRequests != null and !pendingRequests.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>Студент</th>
+                        <th>Дія</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="req : ${pendingRequests}">
+                        <td th:text="${req.student.username}"></td>
+                        <td>
+                            <form th:action="@{/teacher/enroll/confirm/{id}(id=${req.id})}" method="post">
+                                <button type="submit" class="btn small-btn" style="background-color: #2ecc71;">Підтвердити запис</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <a th:href="@{/lectures/add/{courseId}(courseId=${course.id})}" class="btn">Додати лекцію</a>
+                <a th:href="@{/teacher/course/{courseId}/test/add(courseId=${course.id})}" class="btn">Створити тест</a>
+            </div>
             <hr>
         </div>
 
-
-        <h2 class="section-title">Лекції</h2>
+        <!-- ЛЕКЦІЇ (Бачать і студенти, і викладачі) -->
+        <h2 class="section-title">Навчальні лекції</h2>
         <div th:if="${lectures.isEmpty()}">
-            <p>Наразі немає лекцій для цього курсу.</p>
+            <p>У цьому курсі ще немає лекцій.</p>
         </div>
         <div th:each="lecture : ${lectures}" class="list-item">
             <span class="list-item-title" th:text="${lecture.title}"></span>
             <div class="list-item-actions">
-                <a th:href="@{/lectures/{id}(id=${lecture.id})}" class="btn small-btn">Переглянути</a>
+                <a th:href="@{/lectures/{id}(id=${lecture.id})}" class="btn small-btn">Читати</a>
                 <span sec:authorize="hasRole('TEACHER')">
-                    <form th:action="@{/lectures/delete/{id}(id=${lecture.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цю лекцію?');" style="display:inline-block;">
+                    <form th:action="@{/lectures/delete/{id}(id=${lecture.id})}" method="post" style="display:inline;">
                         <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
                     </form>
                 </span>
             </div>
         </div>
 
-        <h2 class="section-title">Тести</h2>
+        <!-- ТЕСТИ (Бачать і студенти, і викладачі) -->
+        <h2 class="section-title">Тестування</h2>
         <div th:if="${tests.isEmpty()}">
-            <p>Наразі немає тестів для цього курсу.</p>
+            <p>Тести поки що відсутні.</p>
         </div>
         <div th:each="test : ${tests}" class="list-item">
-            <span class="list-item-title" th:text="${test.title} + (${test.isFinal()} ? ' (Підсумковий)' : '')"></span>
+            <span class="list-item-title">
+                <span th:text="${test.title}"></span>
+                <span th:if="${test.isFinal()}" style="color: #e67e22; font-weight: bold;"> (Підсумковий)</span>
+            </span>
             <div class="list-item-actions">
-                <a th:href="@{/tests/{id}(id=${test.id})}" class="btn small-btn">Пройти тест</a>
+                <a th:href="@{/tests/{id}(id=${test.id})}" class="btn small-btn">Пройти</a>
                 <span sec:authorize="hasRole('TEACHER')">
-                    <a th:href="@{/teacher/test/{testId}/question/add(testId=${test.id})}" class="btn small-btn">Додати питання</a>
-                    <form th:action="@{/teacher/test/delete/{testId}(testId=${test.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей тест та всі пов\'язані питання та результати?');" style="display:inline-block;">
+                    <a th:href="@{/teacher/test/{testId}/question/add(testId=${test.id})}" class="btn small-btn" style="background: #34495e;">+ Питання</a>
+                    <form th:action="@{/teacher/test/delete/{testId}(testId=${test.id})}" method="post" style="display:inline;">
                         <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
                     </form>
                 </span>
             </div>
         </div>
 
-        <h2 class="section-title" sec:authorize="hasRole('TEACHER')">Студенти на курсі та їхні результати</h2>
-        <div sec:authorize="hasRole('TEACHER')">
+        <!-- БЛОК ДЛЯ ВИКЛАДАЧА: СПИСОК СТУДЕНТІВ ТА УСПІШНІСТЬ -->
+        <div sec:authorize="hasRole('TEACHER')" style="margin-top: 40px;">
+            <h2 class="section-title">Студенти на курсі</h2>
             <div th:if="${enrollments.isEmpty()}">
-                <p>На цьому курсі ще немає записаних студентів.</p>
+                <p>На курсі ще немає активних студентів.</p>
             </div>
-            <table>
+            <table th:if="${!enrollments.isEmpty()}">
                 <thead>
                     <tr>
                         <th>Студент</th>
-                        <th>Останній тест</th>
-                        <th>Оцінка</th>
+                        <th>Результати тестів</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="enrollment : ${enrollments}">
-                        <td th:text="${enrollment.student.username}"></td>
-                        <!-- This is a simplified view. For a full student success report, you'd need more complex queries -->
-                        <td th:if="${allTestResults != null}">
-                            <span th:each="result : ${allTestResults}" th:if="${result.student.id == enrollment.student.id and result.test.course.id == course.id}">
-                                <span th:text="${result.test.title} + ': ' + ${result.score} + ' балів'"></span><br>
-                            </span>
-                        </td>
-                        <td th:if="${allTestResults == null or allTestResults.stream().noneMatch(r -> r.student.id == enrollment.student.id && r.test.course.id == course.id)}">
-                            Немає результатів
+                    <tr th:each="enroll : ${enrollments}">
+                        <td th:text="${enroll.student.username}"></td>
+                        <td>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                <li th:each="res : ${allTestResults}" th:if="${res.student.id == enroll.student.id}">
+                                    <small th:text="${res.test.title} + ': ' + ${res.score} + 'б.'"></small>
+                                </li>
+                            </ul>
                         </td>
                     </tr>
                 </tbody>

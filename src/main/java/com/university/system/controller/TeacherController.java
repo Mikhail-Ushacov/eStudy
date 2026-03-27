@@ -1,6 +1,7 @@
 package com.university.system.controller;
 
 import com.university.system.model.Course;
+import com.university.system.model.Enrollment;
 import com.university.system.model.Lecture;
 import com.university.system.model.Test;
 import com.university.system.model.Question;
@@ -80,35 +81,26 @@ public class TeacherController {
 
     @GetMapping("/course/{courseId}")
     public String viewTeacherCourse(@PathVariable Long courseId, Model model, Principal principal) {
-        Course course = courseService.getCourseById(courseId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + courseId));
-        User teacher = userRepository.findByUsername(principal.getName());
-
-        // Check if the teacher is assigned to this course
-        if (!course.getTeacher().getId().equals(teacher.getId())) {
-            return "redirect:/teacher/dashboard?error=unauthorized";
-        }
-
+        Course course = courseService.getCourseById(courseId).orElseThrow();
+        
+        // Студенти, які вже на курсі
+        model.addAttribute("enrollments", enrollmentRepository.findByCourseIdAndConfirmed(courseId, true));
+        
+        // ЗАЯВКИ на підтвердження
+        model.addAttribute("pendingRequests", enrollmentRepository.findByCourseIdAndConfirmed(courseId, false));
+        
         model.addAttribute("course", course);
         model.addAttribute("lectures", lectureRepository.findByCourseId(courseId));
         model.addAttribute("tests", testRepository.findByCourseId(courseId));
-        model.addAttribute("enrollments", enrollmentRepository.findByCourseId(courseId)); // See who is enrolled
-        model.addAttribute("allStudents", userRepository.findByRole("STUDENT")); // For potential future manual enrollment by teacher
-        
-        // Student success overview for this course
-        // Get all results for tests in this course
-        List<Test> testsInCourse = testRepository.findByCourseId(courseId);
-        List<Long> testIdsInCourse = testsInCourse.stream().map(Test::getId).collect(Collectors.toList());
-        
-        // Fetch results for all students for these tests
-        // This might be more complex if you need aggregated scores per student per course.
-        // For simplicity, showing individual test results for now.
-        model.addAttribute("allTestResults", resultRepository.findAll().stream()
-                                            .filter(r -> testIdsInCourse.contains(r.getTest().getId()))
-                                            .collect(Collectors.toList()));
+        return "course";
+    }
 
-
-        return "course"; // Reusing the general course view but with teacher-specific buttons
+    @PostMapping("/enroll/confirm/{enrollmentId}")
+    public String confirmEnrollment(@PathVariable Long enrollmentId) {
+        Enrollment e = enrollmentRepository.findById(enrollmentId).orElseThrow();
+        e.setConfirmed(true);
+        enrollmentRepository.save(e);
+        return "redirect:/teacher/course/" + e.getCourse().getId();
     }
 
     // Methods to manage tests and questions (new or moved from TestController for teacher role)
