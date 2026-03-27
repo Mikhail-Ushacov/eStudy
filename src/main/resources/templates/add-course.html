@@ -8,7 +8,9 @@
     <div class="container">
         <h1 th:text="${course.id == null ? 'Додати новий курс' : 'Редагувати курс'}"></h1>
 
-        <form th:action="${course.id == null ? '/admin/course/add' : '/admin/course/edit/' + course.id}" th:object="${course}" method="post">
+        <form th:action="${course.id == null ? (isAdmin ? '/admin/course/add' : '/teacher/course/add') : (isAdmin ? '/admin/course/edit/' + course.id : '/teacher/course/edit/' + course.id)}"
+              th:object="${course}"
+              method="post">
             <input type="hidden" th:field="*{id}" />
 
             <div class="form-group">
@@ -21,7 +23,7 @@
                 <textarea id="description" th:field="*{description}" rows="5"></textarea>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" th:if="${isAdmin}">
                 <label for="teacher">Викладач:</label>
                 <select id="teacher" name="teacherId" required>
                     <option value="">Оберіть викладача</option>
@@ -34,7 +36,7 @@
             </div>
 
             <button type="submit" th:text="${course.id == null ? 'Додати курс' : 'Зберегти зміни'}"></button>
-            <a href="/admin/dashboard" class="btn">Скасувати</a>
+            <a th:href="${isAdmin ? '/admin/dashboard' : '/teacher/dashboard'}" class="btn">Скасувати</a>
         </form>
     </div>
 </body>

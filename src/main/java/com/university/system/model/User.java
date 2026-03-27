@@ -3,7 +3,7 @@ package com.university.system.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users") // Fixed: 'user' is reserved in Postgres
+@Table(name = "users")
 public class User {
 
     @Id

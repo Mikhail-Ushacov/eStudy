@@ -45,6 +45,7 @@ public class TeacherController {
     @GetMapping("/course/add")
     public String showAddCourseForm(Model model) {
         model.addAttribute("course", new Course());
+        model.addAttribute("isAdmin", false);
         return "add-course";
     }
 
@@ -61,7 +62,8 @@ public class TeacherController {
         Course course = courseService.getCourseById(id)
                                      .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + id));
         model.addAttribute("course", course);
-        return "add-course"; // Reusing add-course form for editing
+        model.addAttribute("isAdmin", false);
+        return "add-course";
     }
 
     @PostMapping("/course/edit/{id}")

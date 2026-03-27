@@ -47,7 +47,7 @@ public class EnrollmentController {
 
         model.addAttribute("pendingEnrollments", pending);
         model.addAttribute("confirmedEnrollments", confirmed);
-        return "enrollment";
+        return "enroll";
     }
 
     // Студент подає заявку на курс

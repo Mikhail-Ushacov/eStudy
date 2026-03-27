@@ -3,7 +3,7 @@ package com.university.system.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"student_id", "course_id"})})
+@Table(name = "enrollments", uniqueConstraints = {@UniqueConstraint(columnNames = {"student_id", "course_id"})})
 public class Enrollment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +17,10 @@ public class Enrollment {
     @JoinColumn(name = "course_id")
     private Course course;
 
-    private boolean confirmed = false; // Нове поле для підтвердження
+    private boolean confirmed = false;
+
+    @Column(nullable = true)
+    private Integer progress = 0;
 
     // Геттери та сеттери
     public Long getId() { return id; }
@@ -28,4 +31,6 @@ public class Enrollment {
     public void setCourse(Course course) { this.course = course; }
     public boolean isConfirmed() { return confirmed; }
     public void setConfirmed(boolean confirmed) { this.confirmed = confirmed; }
+    public Integer getProgress() { return progress; }
+    public void setProgress(Integer progress) { this.progress = progress; }
 }

@@ -49,9 +49,47 @@ public class AdminController {
     }
 
     // --- COURSES ---
-    @PostMapping("/course/save")
-    public String saveCourse(@ModelAttribute Course course, @RequestParam Long teacherId) {
-        User teacher = userRepository.findById(teacherId).orElseThrow();
+    @PostMapping("/user/update-role")
+    public String updateRole(@RequestParam Long userId, @RequestParam String role) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + userId));
+        user.setRole(role.replace("ROLE_", "")); // Store role without "ROLE_" prefix
+        userRepository.save(user);
+        return "redirect:/admin/dashboard";
+    }
+
+    // Course management for Admin
+    @GetMapping("/course/add")
+    public String showAddCourseForm(Model model) {
+        model.addAttribute("course", new Course());
+        model.addAttribute("teachers", userRepository.findByRole("TEACHER"));
+        model.addAttribute("isAdmin", true);
+        return "add-course";
+    }
+
+    @PostMapping("/course/add")
+    public String addCourse(@ModelAttribute Course course, @RequestParam Long teacherId) {
+        User teacher = userRepository.findById(teacherId)
+                                     .orElseThrow(() -> new IllegalArgumentException("Invalid teacher Id:" + teacherId));
+        course.setTeacher(teacher);
+        courseService.saveCourse(course);
+        return "redirect:/admin/dashboard";
+    }
+
+    @GetMapping("/course/edit/{id}")
+    public String showEditCourseForm(@PathVariable Long id, Model model) {
+        Course course = courseService.getCourseById(id)
+                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + id));
+        model.addAttribute("course", course);
+        model.addAttribute("teachers", userRepository.findByRole("TEACHER"));
+        model.addAttribute("isAdmin", true);
+        return "add-course";
+    }
+
+    @PostMapping("/course/edit/{id}")
+    public String updateCourse(@PathVariable Long id, @ModelAttribute Course course, @RequestParam Long teacherId) {
+        User teacher = userRepository.findById(teacherId)
+                                     .orElseThrow(() -> new IllegalArgumentException("Invalid teacher Id:" + teacherId));
+        course.setId(id); // Ensure the ID is set for update
         course.setTeacher(teacher);
         courseService.saveCourse(course);
         return "redirect:/admin/dashboard";
