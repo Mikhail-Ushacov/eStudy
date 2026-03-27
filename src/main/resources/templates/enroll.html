@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Керування записами - eStudy</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Керування записами на курси</h1>
+
+        <nav>
+            <a href="/">Головна</a>
+            <span sec:authorize="hasRole('TEACHER')"><a href="/teacher/dashboard">Мій кабінет</a></span>
+            <span sec:authorize="hasRole('ADMIN')"><a href="/admin/dashboard">Панель адміна</a></span>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <div th:if="${success}" class="alert-success">
+            <span th:text="${success}"></span>
+        </div>
+
+        <!-- СЕКЦІЯ 1: ЗАЯВКИ, ЩО ОЧІКУЮТЬ ПІДТВЕРДЖЕННЯ -->
+        <h2 class="section-title">Нові заявки (Очікують підтвердження)</h2>
+        <div th:if="${pendingEnrollments == null or pendingEnrollments.isEmpty()}">
+            <p style="text-align: center; color: #7f8c8d;">Нових заявок наразі немає.</p>
+        </div>
+        
+        <table th:if="${pendingEnrollments != null and !pendingEnrollments.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>Студент</th>
+                    <th>Курс</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="enroll : ${pendingEnrollments}">
+                    <td th:text="${enroll.student.username}"></td>
+                    <td th:text="${enroll.course.name}"></td>
+                    <td>
+                        <form th:action="@{/teacher/enroll/confirm/{id}(id=${enroll.id})}" method="post" style="display:inline-block;">
+                            <button type="submit" class="btn small-btn" style="background-color: #2ecc71;">Підтвердити</button>
+                        </form>
+                        <form th:action="@{/teacher/enroll/delete/{id}(id=${enroll.id})}" method="post" style="display:inline-block;" onsubmit="return confirm('Відхилити цю заявку?');">
+                            <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Відхилити</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr style="margin: 40px 0;">
+
+        <!-- СЕКЦІЯ 2: ПІДТВЕРДЖЕНІ ЗАПИСИ -->
+        <h2 class="section-title">Зараховані студенти</h2>
+        <div th:if="${confirmedEnrollments == null or confirmedEnrollments.isEmpty()}">
+            <p style="text-align: center; color: #7f8c8d;">Активних записів на курси немає.</p>
+        </div>
+        
+        <table th:if="${confirmedEnrollments != null and !confirmedEnrollments.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>Студент</th>
+                    <th>Курс</th>
+                    <th>Статус</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="enroll : ${confirmedEnrollments}">
+                    <td th:text="${enroll.student.username}"></td>
+                    <td th:text="${enroll.course.name}"></td>
+                    <td><span style="color: #27ae60; font-weight: bold;">Підтверджено</span></td>
+                    <td>
+                        <form th:action="@{/teacher/enroll/delete/{id}(id=${enroll.id})}" method="post" onsubmit="return confirm('Видалити студента з курсу?');">
+                            <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="javascript:history.back()" class="btn" style="background-color: #95a5a6;">Назад</a>
+        </div>
+    </div>
+</body>
+</html>

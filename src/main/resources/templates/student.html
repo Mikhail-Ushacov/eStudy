@@ -58,7 +58,7 @@
                 <p><strong>Викладач:</strong> <span th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></span></p>
             </div>
             <div class="course-actions">
-                <form th:action="@{/student/enroll}" method="post">
+                <form th:action="@{/enrollments/apply}" method="post">
                     <input type="hidden" name="courseId" th:value="${course.id}">
                     <button type="submit" class="btn" style="background-color: #27ae60;">Подати заявку</button>
                 </form>

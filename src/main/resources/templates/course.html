@@ -41,7 +41,7 @@
                     <tr th:each="req : ${pendingRequests}">
                         <td th:text="${req.student.username}"></td>
                         <td>
-                            <form th:action="@{/teacher/enroll/confirm/{id}(id=${req.id})}" method="post">
+                            <form th:action="@{/enrollments/confirm/{id}(id=${req.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background-color: #2ecc71;">Підтвердити запис</button>
                             </form>
                         </td>
