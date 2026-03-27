@@ -1,80 +1,236 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Панель адміністратора - eStudy</title>
+    <meta charset="UTF-8">
+    <title>Адмін-панель eStudy</title>
     <link rel="stylesheet" href="/css/style.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <style>
+        .admin-section { margin-bottom: 50px; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-buttons { margin-bottom: 20px; text-align: center; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: 1px solid #3498db; background: white; color: #3498db; margin: 0 5px; border-radius: 5px; }
+        .tab-btn.active { background: #3498db; color: white; }
+        .quick-add { background: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 5px solid #3498db; }
+        .quick-add form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Панель адміністратора</h1>
+    <div class="container" style="width: 95%; max-width: 1600px;">
+        <h1>Управління системою eStudy</h1>
 
-        <nav>
-            <a href="/admin/dashboard">Головна</a>
-            <a href="/logout">Вийти</a>
-        </nav>
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="openTab('users-tab')">Користувачі</button>
+            <button class="tab-btn" onclick="openTab('courses-tab')">Курси</button>
+            <button class="tab-btn" onclick="openTab('lectures-tab')">Лекції</button>
+            <button class="tab-btn" onclick="openTab('tests-tab')">Тести</button>
+            <button class="tab-btn" onclick="openTab('questions-tab')">Питання</button>
+            <button class="tab-btn" onclick="openTab('enrolls-tab')">Записи/Результати</button>
+            <a  class="tab-btn" style="background-color: #e74c3c; color: white; text-decoration: none;" href="/logout">Вийти</a>
+        </div>
 
-        <h2 class="section-title">Керування користувачами</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Ім'я користувача</th>
-                    <th>Роль</th>
-                    <th>Дії</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.id}"></td>
-                    <td th:text="${user.username}"></td>
-                    <td>
-                        <form th:action="@{/admin/user/update-role}" method="post" style="display:inline-block;">
-                            <input type="hidden" name="userId" th:value="${user.id}">
-                            <select name="role">
-                                <option value="STUDENT" th:selected="${user.role == 'STUDENT'}">СТУДЕНТ</option>
-                                <option value="TEACHER" th:selected="${user.role == 'TEACHER'}">ВИКЛАДАЧ</option>
-                                <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">АДМІН</option>
-                            </select>
-                            <button type="submit" class="small-btn">Змінити роль</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form th:action="@{/admin/user/delete/{id}(id=${user.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цього користувача?');" style="display:inline-block;">
-                            <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- 1. КОРИСТУВАЧІ -->
+        <div id="users-tab" class="tab-content active admin-section">
+            <div class="quick-add">
+                <h3>Додати/Редагувати користувача</h3>
+                <form th:action="@{/admin/user/save}" method="post">
+                    <input type="hidden" name="id" id="u_id">
+                    <div><label>Username</label><input type="text" name="username" required></div>
+                    <div><label>Password</label><input type="password" name="password" required></div>
+                    <div><label>Role</label>
+                        <select name="role">
+                            <option value="STUDENT">STUDENT</option>
+                            <option value="TEACHER">TEACHER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Зберегти</button>
+                </form>
+            </div>
+            <table class="display datatable">
+                <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.id}"></td><td th:text="${u.username}"></td><td th:text="${u.role}"></td>
+                        <td>
+                            <form th:action="@{/admin/user/delete/{id}(id=${u.id})}" method="post" style="display:inline;">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <h2 class="section-title">Керування курсами</h2>
-        <a href="/admin/course/add" class="btn">Додати новий курс</a>
+        <!-- 2. КУРСИ -->
+        <div id="courses-tab" class="tab-content admin-section">
+            <div class="quick-add">
+                <h3>Новий курс</h3>
+                <form th:action="@{/admin/course/save}" method="post">
+                    <div><label>Назва</label><input type="text" name="name" required></div>
+                    <div><label>Опис</label><input type="text" name="description"></div>
+                    <div><label>Викладач</label>
+                        <select name="teacherId">
+                            <option th:each="t : ${teachers}" th:value="${t.id}" th:text="${t.username}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Створити</button>
+                </form>
+            </div>
+            <table class="display datatable">
+                <thead><tr><th>ID</th><th>Назва</th><th>Викладач</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="c : ${courses}">
+                        <td th:text="${c.id}"></td><td th:text="${c.name}"></td>
+                        <td th:text="${c.teacher != null ? c.teacher.username : '---'}"></td>
+                        <td>
+                            <form th:action="@{/admin/course/delete/{id}(id=${c.id})}" method="post">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Назва курсу</th>
-                    <th>Опис</th>
-                    <th>Викладач</th>
-                    <th>Дії</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="course : ${courses}">
-                    <td th:text="${course.id}"></td>
-                    <td th:text="${course.name}"></td>
-                    <td th:text="${course.description}"></td>
-                    <td th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></td>
-                    <td>
-                        <a th:href="@{/admin/course/edit/{id}(id=${course.id})}" class="btn small-btn">Редагувати</a>
-                        <form th:action="@{/admin/course/delete/{id}(id=${course.id})}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей курс? Це також видалить усі пов\'язані лекції, тести та результати.');" style="display:inline-block;">
-                            <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- 3. ЛЕКЦІЇ -->
+        <div id="lectures-tab" class="tab-content admin-section">
+            <div class="quick-add">
+                <h3>Додати лекцію</h3>
+                <form th:action="@{/admin/lecture/save}" method="post">
+                    <div><label>Заголовок</label><input type="text" name="title" required></div>
+                    <div><label>Файл/Посилання</label><input type="text" name="filePath"></div>
+                    <div><label>Курс</label>
+                        <select name="courseId">
+                            <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Додати</button>
+                </form>
+            </div>
+            <table class="display datatable">
+                <thead><tr><th>ID</th><th>Назва</th><th>Курс</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="l : ${lectures}">
+                        <td th:text="${l.id}"></td><td th:text="${l.title}"></td><td th:text="${l.course.name}"></td>
+                        <td>
+                            <form th:action="@{/admin/lecture/delete/{id}(id=${l.id})}" method="post">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. ТЕСТИ -->
+        <div id="tests-tab" class="tab-content admin-section">
+             <div class="quick-add">
+                <h3>Новий тест</h3>
+                <form th:action="@{/admin/test/save}" method="post">
+                    <div><label>Назва</label><input type="text" name="title" required></div>
+                    <div><label>Курс</label>
+                        <select name="courseId">
+                            <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+                    <div><label>Фінальний?</label><input type="checkbox" name="isFinal"></div>
+                    <button type="submit" class="btn">Створити</button>
+                </form>
+            </div>
+            <table class="display datatable">
+                <thead><tr><th>ID</th><th>Назва</th><th>Курс</th><th>Тип</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="t : ${tests}">
+                        <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course.name}"></td>
+                        <td th:text="${t.isFinal ? 'Фінальний' : 'Звичайний'}"></td>
+                        <td>
+                            <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 5. ПИТАННЯ -->
+        <div id="questions-tab" class="tab-content admin-section">
+            <table class="display datatable">
+                <thead><tr><th>Тест</th><th>Питання</th><th>Правильна</th><th>Бали</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="q : ${questions}">
+                        <td th:text="${q.test.title}"></td><td th:text="${q.question}"></td>
+                        <td th:text="${q.correctAnswer}"></td><td th:text="${q.points}"></td>
+                        <td>
+                            <form th:action="@{/admin/question/delete/{id}(id=${q.id})}" method="post">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 6. ЗАПИСИ ТА РЕЗУЛЬТАТИ -->
+        <div id="enrolls-tab" class="tab-content admin-section">
+            <h3>Заявки студентів</h3>
+            <table class="display datatable">
+                <thead><tr><th>ID</th><th>Студент</th><th>Курс</th><th>Статус</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="e : ${enrollments}">
+                        <td th:text="${e.id}"></td><td th:text="${e.student.username}"></td><td th:text="${e.course.name}"></td>
+                        <td th:text="${e.confirmed ? 'Підтверджено' : 'Очікує'}"></td>
+                        <td>
+                            <form th:if="${!e.confirmed}" th:action="@{/admin/enrollment/confirm/{id}(id=${e.id})}" method="post" style="display:inline;">
+                                <button type="submit" class="btn small-btn">ОК</button>
+                            </form>
+                            <form th:action="@{/admin/enrollment/delete/{id}(id=${e.id})}" method="post" style="display:inline;">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top:40px;">Результати тестів</h3>
+            <table class="display datatable">
+                <thead><tr><th>Студент</th><th>Тест</th><th>Бал</th><th>Дії</th></tr></thead>
+                <tbody>
+                    <tr th:each="r : ${results}">
+                        <td th:text="${r.student.username}"></td><td th:text="${r.test.title}"></td><td th:text="${r.score}"></td>
+                        <td>
+                            <form th:action="@{/admin/result/delete/{id}(id=${r.id})}" method="post">
+                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
     </div>
+
+    <!-- JS Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.datatable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/uk.json"
+                }
+            });
+        });
+
+        function openTab(tabId) {
+            $('.tab-content').removeClass('active');
+            $('.tab-btn').removeClass('active');
+            $('#' + tabId).addClass('active');
+            $(event.currentTarget).addClass('active');
+        }
+    </script>
 </body>
 </html>
