@@ -1,18 +1,7 @@
 package com.university.system.controller;
 
-import com.university.system.model.Course;
-import com.university.system.model.Enrollment;
-import com.university.system.model.Lecture;
-import com.university.system.model.Test;
-import com.university.system.model.Question;
-import com.university.system.model.User;
-import com.university.system.repository.CourseRepository;
-import com.university.system.repository.EnrollmentRepository;
-import com.university.system.repository.LectureRepository;
-import com.university.system.repository.QuestionRepository;
-import com.university.system.repository.ResultRepository;
-import com.university.system.repository.TestRepository;
-import com.university.system.repository.UserRepository;
+import com.university.system.model.*;
+import com.university.system.repository.*;
 import com.university.system.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,6 +22,14 @@ public class TeacherController {
     @Autowired private QuestionRepository questionRepository;
     @Autowired private ResultRepository resultRepository;
     @Autowired private EnrollmentRepository enrollmentRepository;
+
+    private void checkCourseOwnership(Long courseId, Principal principal) {
+        User teacher = userRepository.findByUsername(principal.getName());
+        Course course = courseService.getCourseById(courseId).orElseThrow();
+        if (!course.getTeacher().getId().equals(teacher.getId())) {
+            throw new SecurityException("Unauthorized operation on course: " + courseId);
+        }
+    }
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
@@ -57,39 +54,25 @@ public class TeacherController {
         return "redirect:/teacher/dashboard";
     }
 
-    @GetMapping("/course/edit/{id}")
-    public String showEditCourseForm(@PathVariable Long id, Model model) {
-        Course course = courseService.getCourseById(id)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + id));
-        model.addAttribute("course", course);
-        model.addAttribute("isAdmin", false);
-        return "add-course";
-    }
-
-    @PostMapping("/course/edit/{id}")
-    public String updateCourse(@PathVariable Long id, @ModelAttribute Course course, Principal principal) {
-        User teacher = userRepository.findByUsername(principal.getName());
-        course.setId(id); // Ensure the ID is set for update
-        course.setTeacher(teacher);
-        courseService.saveCourse(course);
-        return "redirect:/teacher/dashboard";
-    }
-
     @PostMapping("/course/delete/{id}")
-    public String deleteCourse(@PathVariable Long id) {
+    public String deleteCourse(@PathVariable Long id, Principal principal) {
+        checkCourseOwnership(id, principal);
         courseService.deleteCourse(id);
         return "redirect:/teacher/dashboard";
     }
 
     @GetMapping("/course/{courseId}")
     public String viewTeacherCourse(@PathVariable Long courseId, Model model, Principal principal) {
+        checkCourseOwnership(courseId, principal);
         Course course = courseService.getCourseById(courseId).orElseThrow();
         
-        // Студенти, які вже на курсі
         model.addAttribute("enrollments", enrollmentRepository.findByCourseIdAndConfirmed(courseId, true));
-        
-        // ЗАЯВКИ на підтвердження
         model.addAttribute("pendingRequests", enrollmentRepository.findByCourseIdAndConfirmed(courseId, false));
+        
+        List<Result> courseResults = resultRepository.findAll().stream()
+                .filter(r -> r.getTest().getCourse().getId().equals(courseId))
+                .collect(Collectors.toList());
+        model.addAttribute("courseTestResults", courseResults);
         
         model.addAttribute("course", course);
         model.addAttribute("lectures", lectureRepository.findByCourseId(courseId));
@@ -97,66 +80,83 @@ public class TeacherController {
         return "course";
     }
 
-    @PostMapping("/enroll/confirm/{enrollmentId}")
-    public String confirmEnrollment(@PathVariable Long enrollmentId) {
-        Enrollment e = enrollmentRepository.findById(enrollmentId).orElseThrow();
-        e.setConfirmed(true);
-        enrollmentRepository.save(e);
-        return "redirect:/teacher/course/" + e.getCourse().getId();
+    // LECTURE MANAGEMENT
+    @GetMapping("/course/{courseId}/lecture/add")
+    public String showAddLectureForm(@PathVariable Long courseId, Model model, Principal principal) {
+        checkCourseOwnership(courseId, principal);
+        Lecture lecture = new Lecture();
+        lecture.setCourse(courseService.getCourseById(courseId).orElseThrow());
+        model.addAttribute("lecture", lecture);
+        return "add-lecture";
     }
 
-    // Methods to manage tests and questions (new or moved from TestController for teacher role)
+    @PostMapping("/course/{courseId}/lecture/add")
+    public String addLecture(@PathVariable Long courseId, @ModelAttribute Lecture lecture, Principal principal) {
+        checkCourseOwnership(courseId, principal);
+        lecture.setCourse(courseService.getCourseById(courseId).orElseThrow());
+        lectureRepository.save(lecture);
+        return "redirect:/teacher/course/" + courseId;
+    }
+
+    @PostMapping("/lecture/delete/{id}")
+    public String deleteLecture(@PathVariable Long id, Principal principal) {
+        Lecture lecture = lectureRepository.findById(id).orElseThrow();
+        checkCourseOwnership(lecture.getCourse().getId(), principal);
+        lectureRepository.deleteById(id);
+        return "redirect:/teacher/course/" + lecture.getCourse().getId();
+    }
+
+    // TEST MANAGEMENT
     @GetMapping("/course/{courseId}/test/add")
-    public String showAddTestForm(@PathVariable Long courseId, Model model) {
-        Course course = courseService.getCourseById(courseId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + courseId));
+    public String showAddTestForm(@PathVariable Long courseId, Model model, Principal principal) {
+        checkCourseOwnership(courseId, principal);
         Test test = new Test();
-        test.setCourse(course);
+        test.setCourse(courseService.getCourseById(courseId).orElseThrow());
         model.addAttribute("test", test);
         return "add-test";
     }
 
     @PostMapping("/course/{courseId}/test/add")
-    public String addTest(@PathVariable Long courseId, @ModelAttribute Test test) {
-        Course course = courseService.getCourseById(courseId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + courseId));
-        test.setCourse(course);
+    public String addTest(@PathVariable Long courseId, @ModelAttribute Test test, Principal principal) {
+        checkCourseOwnership(courseId, principal);
+        test.setCourse(courseService.getCourseById(courseId).orElseThrow());
         testRepository.save(test);
         return "redirect:/teacher/course/" + courseId;
     }
 
     @PostMapping("/test/delete/{testId}")
-    public String deleteTest(@PathVariable Long testId) {
-        Test test = testRepository.findById(testId)
-                                  .orElseThrow(() -> new IllegalArgumentException("Invalid test Id:" + testId));
-        Long courseId = test.getCourse().getId();
+    public String deleteTest(@PathVariable Long testId, Principal principal) {
+        Test test = testRepository.findById(testId).orElseThrow();
+        checkCourseOwnership(test.getCourse().getId(), principal);
         testRepository.deleteById(testId);
-        return "redirect:/teacher/course/" + courseId;
+        return "redirect:/teacher/course/" + test.getCourse().getId();
     }
 
-    // Метод для відображення форми (рядок ~147)
+    // QUESTION MANAGEMENT
     @GetMapping("/test/{testId}/question/add")
-    public String showAddQuestionForm(@PathVariable Long testId, Model model) {
-        // ВИПРАВЛЕНО: використовуємо назву testRepository
-        Test test = testRepository.findById(testId)
-                                  .orElseThrow(() -> new IllegalArgumentException("Invalid test Id:" + testId));
-        model.addAttribute("question", new com.university.system.model.Question());
+    public String showAddQuestionForm(@PathVariable Long testId, Model model, Principal principal) {
+        Test test = testRepository.findById(testId).orElseThrow();
+        checkCourseOwnership(test.getCourse().getId(), principal);
+        model.addAttribute("question", new Question());
         model.addAttribute("test", test);
         return "add-question";
     }
 
-    // Метод для збереження питання (рядок ~154)
     @PostMapping("/test/{testId}/question/add")
-    public String addQuestion(@PathVariable Long testId, @ModelAttribute com.university.system.model.Question question) {
-        // ВИПРАВЛЕНО: використовуємо назву testRepository замість testRepo
-        Test test = testRepository.findById(testId)
-                                  .orElseThrow(() -> new IllegalArgumentException("Invalid test Id:" + testId));
-        
+    public String addQuestion(@PathVariable Long testId, @ModelAttribute Question question, Principal principal) {
+        Test test = testRepository.findById(testId).orElseThrow();
+        checkCourseOwnership(test.getCourse().getId(), principal);
         question.setTest(test);
-        
-        // ВИПРАВЛЕНО: використовуємо questionRepository замість lectureRepository
         questionRepository.save(question); 
-        
         return "redirect:/teacher/course/" + test.getCourse().getId();
+    }
+
+    @PostMapping("/enroll/confirm/{enrollmentId}")
+    public String confirmEnrollment(@PathVariable Long enrollmentId, Principal principal) {
+        Enrollment e = enrollmentRepository.findById(enrollmentId).orElseThrow();
+        checkCourseOwnership(e.getCourse().getId(), principal);
+        e.setConfirmed(true);
+        enrollmentRepository.save(e);
+        return "redirect:/teacher/course/" + e.getCourse().getId();
     }
 }

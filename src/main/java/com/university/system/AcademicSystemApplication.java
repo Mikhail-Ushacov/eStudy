@@ -1,7 +1,6 @@
 package com.university.system;
 
 import com.university.system.model.User;
-import com.university.system.repository.CourseRepository;
 import com.university.system.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

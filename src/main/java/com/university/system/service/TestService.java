@@ -31,7 +31,7 @@ public class TestService {
 
     public boolean canTakeFinalTest(Long studentId, Long courseId) {
         List<Test> allTests = testRepo.findByCourseId(courseId);
-        List<Test> regularTests = allTests.stream().filter(t -> !t.isFinal()).toList();
+        List<Test> regularTests = allTests.stream().filter(t -> !t.isFinalTest()).toList();
         
         for (Test t : regularTests) {
             if (!resultRepo.existsByStudentIdAndTestId(studentId, t.getId())) {

@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -17,11 +17,11 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/", "/courses", "/courses/**", "/login", "/register", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 .requestMatchers("/student/**").hasRole("STUDENT")
-                .requestMatchers("/enrollments/**").hasAnyRole("TEACHER", "ADMIN", "STUDENT")
+                .requestMatchers("/enrollments/**").hasAnyRole("TEACHER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -30,9 +30,6 @@ public class SecurityConfig {
                     var roles = authentication.getAuthorities().stream()
                                                 .map(r -> r.getAuthority())
                                                 .toList();
-                    
-                    System.out.println("DEBUG: Success login. Roles: " + roles);
-
                     if (roles.contains("ROLE_ADMIN")) {
                         response.sendRedirect("/admin/dashboard");
                     } else if (roles.contains("ROLE_TEACHER")) {
@@ -51,8 +48,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 }

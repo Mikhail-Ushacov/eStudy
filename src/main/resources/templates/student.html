@@ -10,7 +10,7 @@
         <h1>Вітаємо, <span th:text="${student.username}"></span>!</h1>
 
         <nav>
-            <a href="/home">Головна</a>
+            <a href="/courses">Головна</a>
             <a href="/student/dashboard">Мій кабінет</a>
             <a href="/logout">Вийти</a>
         </nav>
@@ -58,7 +58,7 @@
                 <p><strong>Викладач:</strong> <span th:text="${course.teacher != null ? course.teacher.username : 'Не призначено'}"></span></p>
             </div>
             <div class="course-actions">
-                <form th:action="@{/enrollments/apply}" method="post">
+                <form th:action="@{/student/enroll}" method="post">
                     <input type="hidden" name="courseId" th:value="${course.id}">
                     <button type="submit" class="btn" style="background-color: #27ae60;">Подати заявку</button>
                 </form>

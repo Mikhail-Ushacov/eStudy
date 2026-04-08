@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${course.name}"></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${course.name}"></h1>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p th:text="${course.description}"></p>
+            <p><strong>Викладач:</strong> <span th:text="${course.teacher.username}"></span></p>
+        </div>
+
+        <nav>
+            <a href="/">Головна</a>
+            <span sec:authorize="hasRole('STUDENT')"><a href="/student/dashboard">Мій кабінет</a></span>
+            <a href="/logout">Вийти</a>
+        </nav>
+
+        <hr>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <div sec:authorize="!isAuthenticated()">
+                <p>Увійдіть як студент, щоб записатися на курс.</p>
+                <a href="/login" class="btn">Увійти</a>
+            </div>
+
+            <div sec:authorize="hasRole('STUDENT')">
+                <div th:if="${enrollment == null}">
+                    <form th:action="@{/student/enroll}" method="post">
+                        <input type="hidden" name="courseId" th:value="${course.id}"/>
+                        <button type="submit" class="btn" style="font-size: 1.2em; padding: 15px 30px; background-color: #27ae60;">Подати заявку на вступ</button>
+                    </form>
+                </div>
+                <div th:if="${enrollment != null and !enrollment.isConfirmed()}" class="alert-success" style="display: inline-block;">
+                    Ваша заявка на розгляді у викладача. Будь ласка, зачекайте.
+                </div>
+            </div>
+            
+            <div sec:authorize="hasRole('TEACHER')">
+                 <p>Викладачі можуть керувати курсами через свій кабінет.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

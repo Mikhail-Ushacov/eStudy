@@ -6,7 +6,6 @@ import com.university.system.model.User;
 import com.university.system.repository.CourseRepository;
 import com.university.system.repository.EnrollmentRepository;
 import com.university.system.repository.UserRepository;
-import com.university.system.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,7 +21,6 @@ public class EnrollmentController {
 
     @Autowired private EnrollmentRepository enrollmentRepo;
     @Autowired private UserRepository userRepo;
-    @Autowired private CourseService courseService;
     @Autowired private CourseRepository courseRepo;
 
     // Перегляд сторінки записів (для викладачів та адмінів)
@@ -48,23 +46,6 @@ public class EnrollmentController {
         model.addAttribute("pendingEnrollments", pending);
         model.addAttribute("confirmedEnrollments", confirmed);
         return "enroll";
-    }
-
-    // Студент подає заявку на курс
-    @PostMapping("/apply")
-    public String applyForCourse(@RequestParam Long courseId, Principal principal) {
-        User student = userRepo.findByUsername(principal.getName());
-        
-        // Перевірка, чи вже є такий запис (щоб не дублювати)
-        if (!enrollmentRepo.existsByStudentIdAndCourseId(student.getId(), courseId)) {
-            Enrollment enrollment = new Enrollment();
-            enrollment.setStudent(student);
-            enrollment.setCourse(courseService.getCourseById(courseId).orElseThrow());
-            enrollment.setConfirmed(false); // Очікує підтвердження
-            enrollmentRepo.save(enrollment);
-        }
-        
-        return "redirect:/student/dashboard";
     }
 
     // Викладач або Адмін підтверджує запис

@@ -29,8 +29,12 @@ public class TestController {
         Test test = testRepo.findById(id).orElseThrow();
         User user = userRepo.findByUsername(principal.getName());
         
-        if (test.isFinal() && !testService.canTakeFinalTest(user.getId(), test.getCourse().getId())) {
-            return "redirect:/courses?error=final_locked";
+        if (resultRepo.existsByStudentIdAndTestId(user.getId(), id)) {
+            return "redirect:/student/course/" + test.getCourse().getId() + "?error=already_taken";
+        }
+        
+        if (test.isFinalTest() && !testService.canTakeFinalTest(user.getId(), test.getCourse().getId())) {
+            return "redirect:/student/course/" + test.getCourse().getId() + "?error=final_locked";
         }
         
         model.addAttribute("test", test);
@@ -42,14 +46,18 @@ public class TestController {
     public String submit(@PathVariable Long id, @RequestParam Map<String, String> params, Principal principal) {
         User user = userRepo.findByUsername(principal.getName());
         Test test = testRepo.findById(id).orElseThrow();
-        int score = testService.calculateScore(id, params);
+        
+        if (resultRepo.existsByStudentIdAndTestId(user.getId(), id)) {
+             return "redirect:/student/course/" + test.getCourse().getId();
+        }
 
+        int score = testService.calculateScore(id, params);
         Result result = new Result();
         result.setStudent(user);
         result.setTest(test);
         result.setScore(score);
         resultRepo.save(result);
 
-        return "redirect:/student/dashboard";
+        return "redirect:/student/course/" + test.getCourse().getId();
     }
 }

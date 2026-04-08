@@ -13,26 +13,25 @@ public class Test {
 
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Changed to LAZY
-    @JoinColumn(name = "course_id")   // Added JoinColumn explicitly
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
     private Course course;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions;
 
-    private boolean isFinal = false; // Indicates if this is the final test for the course
+    private boolean finalTest = false; 
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
-    
-    public boolean isFinal() { return isFinal; }
-    public void setFinal(boolean aFinal) { isFinal = aFinal; }
-
     public List<Question> getQuestions() { return questions; }
     public void setQuestions(List<Question> questions) { this.questions = questions; }
+
+    // GETTER MATCHES THE CONTROLLER: .isFinalTest()
+    public boolean isFinalTest() { return finalTest; }
+    public void setFinalTest(boolean finalTest) { this.finalTest = finalTest; }
 }
