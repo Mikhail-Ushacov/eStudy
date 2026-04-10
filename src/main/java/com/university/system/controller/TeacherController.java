@@ -120,6 +120,17 @@ public class TeacherController {
     public String addTest(@PathVariable Long courseId, @ModelAttribute Test test, Principal principal) {
         checkCourseOwnership(courseId, principal);
         test.setCourse(courseService.getCourseById(courseId).orElseThrow());
+        
+        // Обов'язково зв'язуємо об'єкти між собою для JPA
+        if (test.getQuestions() != null) {
+            test.getQuestions().forEach(q -> {
+                q.setTest(test);
+                if (q.getOptions() != null) {
+                    q.getOptions().forEach(opt -> opt.setQuestion(q));
+                }
+            });
+        }
+        
         testRepository.save(test);
         return "redirect:/teacher/course/" + courseId;
     }

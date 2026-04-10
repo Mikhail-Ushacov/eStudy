@@ -11,9 +11,9 @@ import com.university.system.service.TestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/tests")
@@ -43,7 +43,7 @@ public class TestController {
     }
 
     @PostMapping("/{id}/submit")
-    public String submit(@PathVariable Long id, @RequestParam Map<String, String> params, Principal principal) {
+    public String submit(@PathVariable Long id, @RequestParam MultiValueMap<String, String> params, Principal principal) {
         User user = userRepo.findByUsername(principal.getName());
         Test test = testRepo.findById(id).orElseThrow();
         
@@ -51,7 +51,9 @@ public class TestController {
              return "redirect:/student/course/" + test.getCourse().getId();
         }
 
+        // Передаємо MultiValueMap у сервіс для підрахунку
         int score = testService.calculateScore(id, params);
+        
         Result result = new Result();
         result.setStudent(user);
         result.setTest(test);

@@ -1,28 +1,138 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Додати тест</title>
+    <title>Створити тест</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .summary-box { position: sticky; top: 0; background: #2c3e50; color: white; padding: 15px; z-index: 1000; border-radius: 0 0 8px 8px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .question-block { border: 2px solid #3498db; padding: 20px; margin-bottom: 20px; border-radius: 8px; background: #fff; }
+        .answer-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+        .type-info { font-weight: bold; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+        .single { background: #d4edda; color: #155724; }
+        .multi { background: #fff3cd; color: #856404; }
+        .none { background: #f8d7da; color: #721c24; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Додати новий тест до курсу: <span th:text="${test.course.name}"></span></h1>
+        <div class="summary-box">
+            <span>Створення тесту: <strong th:text="${test.course.name}"></strong></span>
+            <span>Загальний бал: <strong id="totalScore">0</strong></span>
+        </div>
 
-        <form th:action="@{/teacher/course/{courseId}/test/add(courseId=${test.course.id})}" th:object="${test}" method="post">
+        <form th:action="@{/teacher/course/{id}/test/add(id=${test.course.id})}" th:object="${test}" method="post">
             <div class="form-group">
-                <label for="title">Назва тесту:</label>
-                <input type="text" id="title" th:field="*{title}" required />
+                <label>Заголовок тесту:</label>
+                <input type="text" th:field="*{title}" required />
             </div>
 
             <div class="form-group">
-                <label for="isFinal">Це підсумковий тест?</label>
-                <input type="checkbox" id="isFinal" th:field="*{isFinal}" />
-                <small>Підсумковий тест буде доступний лише після проходження всіх інших тестів курсу.</small>
+                <label>Опис:</label>
+                <textarea th:field="*{description}" rows="2"></textarea>
             </div>
 
-            <button type="submit">Додати тест</button>
-            <a th:href="@{/teacher/course/{courseId}(courseId=${test.course.id})}" class="btn">Скасувати</a>
+            <div id="questionsContainer">
+                <!-- Сюди додаються питання через JS -->
+            </div>
+
+            <button type="button" onclick="addQuestion()" class="btn" style="background: #27ae60;">+ Додати питання</button>
+
+            <hr>
+            <div style="display: flex; gap: 20px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Час початку:</label>
+                    <input type="time" th:field="*{startTime}" required />
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Час закінчення:</label>
+                    <input type="time" th:field="*{endTime}" required />
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn">Зберегти тест</button>
+                <a th:href="@{/teacher/course/{id}(id=${test.course.id})}" class="btn" style="background:#95a5a6;">Скасувати</a>
+            </div>
         </form>
     </div>
+
+    <script>
+        let qCount = 0;
+
+        function addQuestion() {
+            const container = document.getElementById('questionsContainer');
+            const qIdx = qCount++;
+            const html = `
+                <div class="question-block" id="q-block-${qIdx}">
+                    <div style="display: flex; justify-content: space-between;">
+                        <h3 style="margin:0">Питання №${qIdx + 1}</h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label>Бал:</label>
+                            <input type="number" name="questions[${qIdx}].points" value="1" min="1" style="width:60px" class="q-points" onchange="updateTotalScore()">
+                        </div>
+                    </div>
+                    
+                    <input type="text" name="questions[${qIdx}].question" placeholder="Текст питання" required style="margin: 15px 0;">
+                    
+                    <div id="q-type-${qIdx}" class="type-info none">Оберіть правильну відповідь</div>
+                    
+                    <div id="options-${qIdx}"></div>
+                    
+                    <button type="button" onclick="addOption(${qIdx})" class="btn small-btn" style="background:#3498db">+ Додати відповідь</button>
+                    <button type="button" onclick="removeQuestion(${qIdx})" class="btn small-btn" style="background:#e74c3c">Видалити питання</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            addOption(qIdx);
+            updateTotalScore();
+        }
+
+        function addOption(qIdx) {
+            const container = document.getElementById(`options-${qIdx}`);
+            const oIdx = container.children.length;
+            const html = `
+                <div class="answer-row">
+                    <input type="checkbox" name="questions[${qIdx}].options[${oIdx}].isCorrect" onchange="checkType(${qIdx})" class="correct-check">
+                    <input type="text" name="questions[${qIdx}].options[${oIdx}].optionText" placeholder="Варіант відповіді" required>
+                    <button type="button" onclick="this.parentElement.remove(); checkType(${qIdx});" class="btn small-btn" style="background:#bdc3c7">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            checkType(qIdx);
+        }
+
+        function checkType(qIdx) {
+            const block = document.getElementById(`q-block-${qIdx}`);
+            const typeLabel = document.getElementById(`q-type-${qIdx}`);
+            const checkedCount = block.querySelectorAll('.correct-check:checked').length;
+
+            if (checkedCount === 0) {
+                typeLabel.innerText = "⚠️ Немає правильних відповідей";
+                typeLabel.className = "type-info none";
+            } else if (checkedCount === 1) {
+                typeLabel.innerText = "✓ Питання з однією відповіддю";
+                typeLabel.className = "type-info single";
+            } else {
+                typeLabel.innerText = "✓ Питання з кількома відповідями";
+                typeLabel.className = "type-info multi";
+            }
+        }
+
+        function removeQuestion(qIdx) {
+            document.getElementById(`q-block-${qIdx}`).remove();
+            updateTotalScore();
+        }
+
+        function updateTotalScore() {
+            let total = 0;
+            document.querySelectorAll('.q-points').forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            document.getElementById('totalScore').innerText = total;
+        }
+
+        // Авто-додавання першого питання
+        window.onload = addQuestion;
+    </script>
 </body>
 </html>

@@ -29,24 +29,19 @@
                 </span>
             </div>
 
-            <div th:each="q, stat : ${questions}" class="form-group" style="background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 20px;">
-                <p style="font-weight: bold;">[[${stat.index + 1}]]. <span th:text="${q.question}"></span> (<span th:text="${q.points}"></span> балів)</p>
-                <label style="display: block; margin-bottom: 8px;">
-                    <input type="radio" th:name="'q'+${q.id}" value="A" required />
-                    <span th:text="${q.optionA}"></span>
-                </label>
-                <label style="display: block; margin-bottom: 8px;">
-                    <input type="radio" th:name="'q'+${q.id}" value="B" required />
-                    <span th:text="${q.optionB}"></span>
-                </label>
-                <label style="display: block; margin-bottom: 8px;">
-                    <input type="radio" th:name="'q'+${q.id}" value="C" required />
-                    <span th:text="${q.optionC}"></span>
-                </label>
-                <label style="display: block; margin-bottom: 8px;">
-                    <input type="radio" th:name="'q'+${q.id}" value="D" required />
-                    <span th:text="${q.optionD}"></span>
-                </label>
+            <div th:each="q, stat : ${questions}" class="form-group">
+                <p><strong th:text="${stat.index + 1} + '. ' + ${q.question}"></strong> 
+                (<span th:text="${q.points}"></span> б.)</p>
+                
+                <div th:each="opt : ${q.options}">
+                    <label>
+                        <!-- Якщо питання має кілька правильних відповідей, використовуємо checkbox, якщо одну - radio -->
+                        <input th:type="${q.options.?[isCorrect].size() > 1 ? 'checkbox' : 'radio'}" 
+                            th:name="'q' + ${q.id}" 
+                            th:value="${opt.id}" />
+                        <span th:text="${opt.optionText}"></span>
+                    </label>
+                </div>
             </div>
             
             <div th:if="${!questions.isEmpty()}">
