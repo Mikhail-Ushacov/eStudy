@@ -9,6 +9,7 @@
         <h1>Додати нову лекцію для курсу: <span th:text="${lecture.course.name}"></span></h1>
 
         <form th:action="@{/lectures/add/{courseId}(courseId=${lecture.course.id})}" th:object="${lecture}" method="post">
+            <input type="hidden" th:field="*{id}" />
             <div class="form-group">
                 <label for="title">Назва лекції:</label>
                 <input type="text" id="title" th:field="*{title}" required />

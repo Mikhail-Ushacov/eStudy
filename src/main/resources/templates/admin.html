@@ -55,6 +55,7 @@
                     <tr th:each="u : ${users}">
                         <td th:text="${u.id}"></td><td th:text="${u.username}"></td><td th:text="${u.role}"></td>
                         <td>
+                            <a th:href="@{/admin/user/edit/{id}(id=${u.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/user/delete/{id}(id=${u.id})}" method="post" style="display:inline;">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>
@@ -86,7 +87,8 @@
                         <td th:text="${c.id}"></td><td th:text="${c.name}"></td>
                         <td th:text="${c.teacher != null ? c.teacher.username : '---'}"></td>
                         <td>
-                            <form th:action="@{/admin/course/delete/{id}(id=${c.id})}" method="post">
+                            <a th:href="@{/admin/course/edit/{id}(id=${c.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
+                            <form th:action="@{/admin/course/delete/{id}(id=${c.id})}" method="post" style="display:inline;">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>
                         </td>
@@ -116,6 +118,7 @@
                     <tr th:each="l : ${lectures}">
                         <td th:text="${l.id}"></td><td th:text="${l.title}"></td><td th:text="${l.course.name}"></td>
                         <td>
+                            <a th:href="@{/admin/lecture/edit/{id}(id=${l.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/lecture/delete/{id}(id=${l.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>
@@ -147,6 +150,7 @@
                         <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course.name}"></td>
                         <td th:text="${t.isFinal ? 'Фінальний' : 'Звичайний'}"></td>
                         <td>
+                            <a th:href="@{/admin/test/edit/{id}(id=${t.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>
@@ -165,6 +169,7 @@
                         <td th:text="${q.test.title}"></td><td th:text="${q.question}"></td>
                         <td th:text="${q.correctAnswer}"></td><td th:text="${q.points}"></td>
                         <td>
+                            <a th:href="@{/admin/question/edit/{id}(id=${q.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/question/delete/{id}(id=${q.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>

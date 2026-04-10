@@ -4,6 +4,7 @@ import com.university.system.model.*;
 import com.university.system.repository.*;
 import com.university.system.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
     @Autowired private CourseService courseService;
     @Autowired private UserRepository userRepository;
     @Autowired private LectureRepository lectureRepository;
@@ -18,6 +20,7 @@ public class AdminController {
     @Autowired private QuestionRepository questionRepository;
     @Autowired private ResultRepository resultRepository;
     @Autowired private EnrollmentRepository enrollmentRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -29,16 +32,43 @@ public class AdminController {
         model.addAttribute("results", resultRepository.findAll());
         model.addAttribute("enrollments", enrollmentRepository.findAll());
         
-        // Для форм додавання
+        // Списки для випадаючих меню у формах швидкого додавання
         model.addAttribute("teachers", userRepository.findByRole("TEACHER"));
         model.addAttribute("students", userRepository.findByRole("STUDENT"));
         return "admin";
     }
 
-    // --- USERS ---
+    // --- УПРАВЛІННЯ КОРИСТУВАЧАМИ ---
+
     @PostMapping("/user/save")
     public String saveUser(@ModelAttribute User user) {
+        // Якщо це новий користувач або пароль було змінено (не зашифрований)
+        if (user.getId() == null || (user.getPassword() != null && user.getPassword().length() < 30)) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         userRepository.save(user);
+        return "redirect:/admin/dashboard";
+    }
+
+    @GetMapping("/user/edit/{id}")
+    public String showEditUserForm(@PathVariable Long id, Model model) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        model.addAttribute("user", user);
+        return "edit-user";
+    }
+
+    @PostMapping("/user/edit/{id}")
+    public String updateUser(@PathVariable Long id, @ModelAttribute User user, @RequestParam(required = false) String newPassword) {
+        User existingUser = userRepository.findById(id).orElseThrow();
+        existingUser.setUsername(user.getUsername());
+        existingUser.setRole(user.getRole());
+        
+        if (newPassword != null && !newPassword.isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(newPassword));
+        }
+        
+        userRepository.save(existingUser);
         return "redirect:/admin/dashboard";
     }
 
@@ -48,16 +78,8 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
-    // --- COURSES ---
-    @PostMapping("/user/update-role")
-    public String updateRole(@RequestParam Long userId, @RequestParam String role) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + userId));
-        user.setRole(role.replace("ROLE_", "")); // Store role without "ROLE_" prefix
-        userRepository.save(user);
-        return "redirect:/admin/dashboard";
-    }
+    // --- УПРАВЛІННЯ КУРСАМИ ---
 
-    // Course management for Admin
     @GetMapping("/course/add")
     public String showAddCourseForm(Model model) {
         model.addAttribute("course", new Course());
@@ -66,10 +88,10 @@ public class AdminController {
         return "add-course";
     }
 
-    @PostMapping("/course/add")
-    public String addCourse(@ModelAttribute Course course, @RequestParam Long teacherId) {
+    @PostMapping("/course/save")
+    public String saveCourse(@ModelAttribute Course course, @RequestParam Long teacherId) {
         User teacher = userRepository.findById(teacherId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid teacher Id:" + teacherId));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid teacher Id:" + teacherId));
         course.setTeacher(teacher);
         courseService.saveCourse(course);
         return "redirect:/admin/dashboard";
@@ -78,21 +100,11 @@ public class AdminController {
     @GetMapping("/course/edit/{id}")
     public String showEditCourseForm(@PathVariable Long id, Model model) {
         Course course = courseService.getCourseById(id)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + id));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + id));
         model.addAttribute("course", course);
         model.addAttribute("teachers", userRepository.findByRole("TEACHER"));
         model.addAttribute("isAdmin", true);
         return "add-course";
-    }
-
-    @PostMapping("/course/edit/{id}")
-    public String updateCourse(@PathVariable Long id, @ModelAttribute Course course, @RequestParam Long teacherId) {
-        User teacher = userRepository.findById(teacherId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid teacher Id:" + teacherId));
-        course.setId(id); // Ensure the ID is set for update
-        course.setTeacher(teacher);
-        courseService.saveCourse(course);
-        return "redirect:/admin/dashboard";
     }
 
     @PostMapping("/course/delete/{id}")
@@ -101,7 +113,17 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
-    // --- LECTURES ---
+    // --- УПРАВЛІННЯ ЛЕКЦІЯМИ ---
+
+    @GetMapping("/lecture/edit/{id}")
+    public String showEditLectureForm(@PathVariable Long id, Model model) {
+        Lecture lecture = lectureRepository.findById(id).orElseThrow();
+        model.addAttribute("lecture", lecture);
+        model.addAttribute("courses", courseService.getAllCourses());
+        model.addAttribute("isAdmin", true);
+        return "add-lecture";
+    }
+
     @PostMapping("/lecture/save")
     public String saveLecture(@ModelAttribute Lecture lecture, @RequestParam Long courseId) {
         lecture.setCourse(courseService.getCourseById(courseId).orElseThrow());
@@ -115,7 +137,17 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
-    // --- TESTS ---
+    // --- УПРАВЛІННЯ ТЕСТАМИ ---
+
+    @GetMapping("/test/edit/{id}")
+    public String showEditTestForm(@PathVariable Long id, Model model) {
+        Test test = testRepository.findById(id).orElseThrow();
+        model.addAttribute("test", test);
+        model.addAttribute("courses", courseService.getAllCourses());
+        model.addAttribute("isAdmin", true);
+        return "add-test";
+    }
+
     @PostMapping("/test/save")
     public String saveTest(@ModelAttribute Test test, @RequestParam Long courseId) {
         test.setCourse(courseService.getCourseById(courseId).orElseThrow());
@@ -129,7 +161,17 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
-    // --- QUESTIONS ---
+    // --- УПРАВЛІННЯ ПИТАННЯМИ ---
+
+    @GetMapping("/question/edit/{id}")
+    public String showEditQuestionForm(@PathVariable Long id, Model model) {
+        Question question = questionRepository.findById(id).orElseThrow();
+        model.addAttribute("question", question);
+        model.addAttribute("test", question.getTest());
+        model.addAttribute("isAdmin", true);
+        return "add-question";
+    }
+
     @PostMapping("/question/save")
     public String saveQuestion(@ModelAttribute Question question, @RequestParam Long testId) {
         question.setTest(testRepository.findById(testId).orElseThrow());
@@ -143,7 +185,8 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
-    // --- ENROLLMENTS ---
+    // --- УПРАВЛІННЯ ЗАПИСАМИ (ENROLLMENTS) ---
+
     @PostMapping("/enrollment/confirm/{id}")
     public String confirmEnroll(@PathVariable Long id) {
         Enrollment e = enrollmentRepository.findById(id).orElseThrow();
@@ -158,7 +201,8 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
-    // --- RESULTS ---
+    // --- УПРАВЛІННЯ РЕЗУЛЬТАТАМИ ---
+
     @PostMapping("/result/delete/{id}")
     public String deleteResult(@PathVariable Long id) {
         resultRepository.deleteById(id);
