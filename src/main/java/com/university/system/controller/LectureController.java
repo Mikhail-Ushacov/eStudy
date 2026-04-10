@@ -2,6 +2,7 @@ package com.university.system.controller;
 
 import com.university.system.model.Course;
 import com.university.system.model.Lecture;
+import com.university.system.model.LectureSection;
 import com.university.system.repository.LectureRepository;
 import com.university.system.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +40,18 @@ public class LectureController {
 
     @PostMapping("/add/{courseId}")
     public String addLecture(@PathVariable Long courseId, @ModelAttribute Lecture lecture) {
-        Course course = courseService.getCourseById(courseId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + courseId));
+        Course course = courseService.getCourseById(courseId).orElseThrow();
         lecture.setCourse(course);
+        
+        // Прив'язуємо розділи до лекції перед збереженням
+        if (lecture.getSections() != null) {
+            for (int i = 0; i < lecture.getSections().size(); i++) {
+                LectureSection section = lecture.getSections().get(i);
+                section.setLecture(lecture);
+                section.setOrderIndex(i);
+            }
+        }
+        
         lectureRepository.save(lecture);
         return "redirect:/teacher/course/" + courseId;
     }

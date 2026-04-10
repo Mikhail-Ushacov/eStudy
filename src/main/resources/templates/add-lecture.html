@@ -3,26 +3,116 @@
 <head>
     <title>Додати лекцію</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .section-block {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+            position: relative;
+        }
+        .remove-section {
+            background: #e74c3c;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .time-group {
+            display: flex;
+            gap: 20px;
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Додати нову лекцію для курсу: <span th:text="${lecture.course.name}"></span></h1>
+        <h1>Створення лекції для курсу: <span th:text="${lecture.course.name}"></span></h1>
 
-        <form th:action="@{/lectures/add/{courseId}(courseId=${lecture.course.id})}" th:object="${lecture}" method="post">
-            <input type="hidden" th:field="*{id}" />
+        <form th:action="@{/lectures/add/{courseId}(courseId=${lecture.course.id})}" 
+              th:object="${lecture}" method="post" id="lectureForm">
+            
             <div class="form-group">
-                <label for="title">Назва лекції:</label>
-                <input type="text" id="title" th:field="*{title}" required />
+                <label>Заголовок лекції:</label>
+                <input type="text" th:field="*{title}" placeholder="Введіть тему лекції" required />
             </div>
 
             <div class="form-group">
-                <label for="filePath">Шлях до файлу лекції (наприклад, /lectures/my-first-lecture.html):</label>
-                <input type="text" id="filePath" th:field="*{filePath}" required />
+                <label>Опис:</label>
+                <textarea th:field="*{description}" rows="2" placeholder="Короткий опис"></textarea>
             </div>
 
-            <button type="submit">Додати лекцію</button>
-            <a th:href="@{/teacher/course/{courseId}(courseId=${lecture.course.id})}" class="btn">Скасувати</a>
+            <hr>
+            <h3>Зміст лекції</h3>
+            <div id="sectionsContainer">
+                <!-- Розділи будуть додаватися сюди через JS -->
+            </div>
+
+            <button type="button" onclick="addSection()" class="btn" style="background: #27ae60;">+ Додати розділ</button>
+
+            <hr>
+            <div class="time-group">
+                <div style="flex: 1;">
+                    <label>Час початку:</label>
+                    <input type="time" th:field="*{startTime}" required />
+                </div>
+                <div style="flex: 1;">
+                    <label>Час закінчення:</label>
+                    <input type="time" th:field="*{endTime}" required />
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn">Зберегти лекцію</button>
+                <a th:href="@{/teacher/course/{id}(id=${lecture.course.id})}" class="btn" style="background:#95a5a6;">Скасувати</a>
+            </div>
         </form>
     </div>
+
+    <script>
+        let sectionCount = 0;
+
+        function addSection() {
+            const container = document.getElementById('sectionsContainer');
+            const sectionHtml = `
+                <div class="section-block" id="section-${sectionCount}">
+                    <button type="button" class="btn small-btn remove-section" onclick="removeSection(${sectionCount})">Видалити розділ</button>
+                    <div class="form-group">
+                        <label>Назва розділу:</label>
+                        <input type="text" name="sections[${sectionCount}].sectionTitle" required placeholder="Наприклад: Вступ" />
+                    </div>
+                    <div class="form-group">
+                        <label>Текст розділу:</label>
+                        <textarea name="sections[${sectionCount}].sectionText" rows="4" required placeholder="Основний контент лекції..."></textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', sectionHtml);
+            sectionCount++;
+        }
+
+        function removeSection(id) {
+            const element = document.getElementById('section-' + id);
+            element.remove();
+            reindexSections();
+        }
+
+        // Функція для переіндексації після видалення, щоб Spring правильно зчитав List
+        function reindexSections() {
+            const sections = document.querySelectorAll('.section-block');
+            sectionCount = 0;
+            sections.forEach((section, index) => {
+                section.id = 'section-' + index;
+                section.querySelector('input').name = `sections[${index}].sectionTitle`;
+                section.querySelector('textarea').name = `sections[${index}].sectionText`;
+                section.querySelector('.remove-section').setAttribute('onclick', `removeSection(${index})`);
+                sectionCount++;
+            });
+        }
+
+        // Додаємо один розділ автоматично при завантаженні
+        window.onload = addSection;
+    </script>
 </body>
 </html>
