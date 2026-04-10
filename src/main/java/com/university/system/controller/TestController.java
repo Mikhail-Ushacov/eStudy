@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
+import java.time.LocalDateTime; // Додано імпорт
 
 @Controller
 @RequestMapping("/tests")
@@ -28,6 +29,15 @@ public class TestController {
     public String viewTest(@PathVariable Long id, Model model, Principal principal) {
         Test test = testRepo.findById(id).orElseThrow();
         User user = userRepo.findByUsername(principal.getName());
+        LocalDateTime now = LocalDateTime.now(); // Додано ініціалізацію
+
+        // Перевірка часових рамок
+        if (test.getStartTime() != null && now.isBefore(test.getStartTime())) {
+            return "redirect:/student/course/" + test.getCourse().getId() + "?error=not_started_yet";
+        }
+        if (test.getEndTime() != null && now.isAfter(test.getEndTime())) {
+            return "redirect:/student/course/" + test.getCourse().getId() + "?error=test_expired";
+        }
         
         if (resultRepo.existsByStudentIdAndTestId(user.getId(), id)) {
             return "redirect:/student/course/" + test.getCourse().getId() + "?error=already_taken";
@@ -51,9 +61,7 @@ public class TestController {
              return "redirect:/student/course/" + test.getCourse().getId();
         }
 
-        // Передаємо MultiValueMap у сервіс для підрахунку
         int score = testService.calculateScore(id, params);
-        
         Result result = new Result();
         result.setStudent(user);
         result.setTest(test);

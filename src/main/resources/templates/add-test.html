@@ -40,12 +40,13 @@
             <hr>
             <div style="display: flex; gap: 20px;">
                 <div class="form-group" style="flex: 1;">
-                    <label>Час початку:</label>
-                    <input type="time" th:field="*{startTime}" required />
+                    <label>Дата та час початку:</label>
+                    <!-- Змінено type="time" на type="datetime-local" -->
+                    <input type="datetime-local" th:field="*{startTime}" required />
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Час закінчення:</label>
-                    <input type="time" th:field="*{endTime}" required />
+                    <label>Дата та час закінчення:</label>
+                    <input type="datetime-local" th:field="*{endTime}" required />
                 </div>
             </div>
 

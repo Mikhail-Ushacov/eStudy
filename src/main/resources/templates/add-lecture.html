@@ -52,14 +52,15 @@
             <button type="button" onclick="addSection()" class="btn" style="background: #27ae60;">+ Додати розділ</button>
 
             <hr>
-            <div class="time-group">
-                <div style="flex: 1;">
-                    <label>Час початку:</label>
-                    <input type="time" th:field="*{startTime}" required />
+            <div style="display: flex; gap: 20px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Дата та час початку:</label>
+                    <!-- Змінено type="time" на type="datetime-local" -->
+                    <input type="datetime-local" th:field="*{startTime}" required />
                 </div>
-                <div style="flex: 1;">
-                    <label>Час закінчення:</label>
-                    <input type="time" th:field="*{endTime}" required />
+                <div class="form-group" style="flex: 1;">
+                    <label>Дата та час закінчення:</label>
+                    <input type="datetime-local" th:field="*{endTime}" required />
                 </div>
             </div>
 

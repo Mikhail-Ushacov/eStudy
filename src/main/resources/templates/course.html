@@ -78,7 +78,10 @@
         <div th:each="test : ${tests}" class="list-item">
             <span class="list-item-title">
                 <span th:text="${test.title}"></span>
-                <span th:if="${test.finalTest}" style="color: #e67e22; font-weight: bold;"> (Підсумковий)</span>
+                <small style="display: block; color: #666;">
+                    Доступно з: <span th:text="${#temporals.format(test.startTime, 'dd.MM.yyyy HH:mm')}"></span> 
+                    по: <span th:text="${#temporals.format(test.endTime, 'dd.MM.yyyy HH:mm')}"></span>
+                </small>
             </span>
             <div class="list-item-actions">
                 <span sec:authorize="hasRole('STUDENT')">

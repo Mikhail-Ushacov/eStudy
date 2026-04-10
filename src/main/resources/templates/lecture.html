@@ -10,7 +10,12 @@
         <p th:text="${lecture.description}" style="font-style: italic; color: #7f8c8d;"></p>
         
         <div style="background: #f1f1f1; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
-            <small>Час проведення: <span th:text="${lecture.startTime}"></span> - <span th:text="${lecture.endTime}"></span></small>
+            <small>
+                Час проведення: 
+                <span th:text="${#temporals.format(lecture.startTime, 'dd.MM.yyyy HH:mm')}"></span> 
+                — 
+                <span th:text="${#temporals.format(lecture.endTime, 'dd.MM.yyyy HH:mm')}"></span>
+            </small>
         </div>
 
         <div th:each="sec : ${lecture.sections}" style="margin-bottom: 30px;">

@@ -1,7 +1,8 @@
 package com.university.system.model;
 
 import jakarta.persistence.*;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,12 +14,16 @@ public class Test {
     private Long id;
 
     private String title;
-    
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime startTime;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime endTime;
+
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    private LocalTime startTime;
-    private LocalTime endTime;
     private boolean finalTest = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,10 +40,13 @@ public class Test {
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public LocalTime getStartTime() { return startTime; }
-    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
-    public LocalTime getEndTime() { return endTime; }
-    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+    
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    
     public boolean isFinalTest() { return finalTest; }
     public void setFinalTest(boolean finalTest) { this.finalTest = finalTest; }
     public Course getCourse() { return course; }
