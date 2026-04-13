@@ -149,11 +149,34 @@ public class AdminController {
     }
 
     @PostMapping("/test/save")
-    public String saveTest(@ModelAttribute Test test, @RequestParam Long courseId) {
+public String saveTest(@ModelAttribute Test test, 
+                    @RequestParam(required = false) Long courseId, 
+                    @RequestParam(required = false) Boolean isFinal) {
+    
+    if (courseId != null) {
         test.setCourse(courseService.getCourseById(courseId).orElseThrow());
-        testRepository.save(test);
-        return "redirect:/admin/dashboard";
     }
+    
+    if (isFinal != null) {
+        test.setFinalTest(isFinal);
+    }
+    
+    if (test.getQuestions() != null) {
+        test.getQuestions().removeIf(q -> q.getQuestion() == null || q.getQuestion().trim().isEmpty());
+        
+        for (Question q : test.getQuestions()) {
+            q.setTest(test);
+            if (q.getOptions() != null) {
+                for (AnswerOption opt : q.getOptions()) {
+                    opt.setQuestion(q);
+                }
+            }
+        }
+    }
+    
+    testRepository.save(test);
+    return "redirect:/admin/dashboard";
+}
 
     @PostMapping("/test/delete/{id}")
     public String deleteTest(@PathVariable Long id) {
@@ -162,6 +185,15 @@ public class AdminController {
     }
 
     // --- УПРАВЛІННЯ ПИТАННЯМИ ---
+
+    @GetMapping("/test/{testId}/question/add")
+    public String showAddQuestionForm(@PathVariable Long testId, Model model) {
+        Test test = testRepository.findById(testId).orElseThrow();
+        model.addAttribute("question", new Question());
+        model.addAttribute("test", test);
+        model.addAttribute("isAdmin", true);
+        return "add-question";
+    }
 
     @GetMapping("/question/edit/{id}")
     public String showEditQuestionForm(@PathVariable Long id, Model model) {
@@ -174,7 +206,38 @@ public class AdminController {
 
     @PostMapping("/question/save")
     public String saveQuestion(@ModelAttribute Question question, @RequestParam Long testId) {
-        question.setTest(testRepository.findById(testId).orElseThrow());
+        Test test = testRepository.findById(testId).orElseThrow();
+        question.setTest(test);
+        
+        if (question.getOptionA() != null && !question.getOptionA().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionA());
+            opt.setCorrect("A".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        if (question.getOptionB() != null && !question.getOptionB().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionB());
+            opt.setCorrect("B".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        if (question.getOptionC() != null && !question.getOptionC().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionC());
+            opt.setCorrect("C".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        if (question.getOptionD() != null && !question.getOptionD().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionD());
+            opt.setCorrect("D".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        
         questionRepository.save(question);
         return "redirect:/admin/dashboard";
     }

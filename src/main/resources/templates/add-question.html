@@ -8,7 +8,7 @@
     <div class="container">
         <h1>Додати нове питання до тесту: <span th:text="${test.title}"></span></h1>
 
-        <form th:action="@{/teacher/test/{testId}/question/add(testId=${test.id})}" th:object="${question}" method="post">
+        <form th:action="${isAdmin} ? @{/admin/question/save(testId=${test.id})} : @{/teacher/test/{testId}/question/add(testId=${test.id})}" th:object="${question}" method="post">
             <div class="form-group">
                 <label for="question">Питання:</label>
                 <textarea id="question" th:field="*{question}" rows="3" required></textarea>
@@ -48,7 +48,7 @@
             </div>
 
             <button type="submit">Додати питання</button>
-            <a th:href="@{/teacher/course/{courseId}(courseId=${test.course.id})}" class="btn">Скасувати</a>
+            <a th:href="${isAdmin} ? @{/admin/dashboard} : @{/teacher/course/{courseId}(courseId=${test.course.id})}" class="btn">Скасувати</a>
         </form>
     </div>
 </body>

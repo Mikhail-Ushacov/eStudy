@@ -20,7 +20,13 @@
             <span>Загальний бал: <strong id="totalScore">0</strong></span>
         </div>
 
-        <form th:action="@{/teacher/course/{id}/test/add(id=${test.course.id})}" th:object="${test}" method="post">
+        <form th:action="${isAdmin ? '/admin/test/save' : '/teacher/course/' + test.course.id + '/test/add'}"
+      th:object="${test}"
+      method="post">
+
+    <input type="hidden" th:field="*{id}" />
+
+    <input type="hidden" name="courseId" th:value="${test.course.id}" />
             <div class="form-group">
                 <label>Заголовок тесту:</label>
                 <input type="text" th:field="*{title}" required />
@@ -32,8 +38,32 @@
             </div>
 
             <div id="questionsContainer">
-                <!-- Сюди додаються питання через JS -->
+
+    <div th:each="question, qStat : ${test.questions}" class="question-block" th:id="'q-block-' + ${qStat.index}">
+        <input type="hidden" th:field="*{questions[__${qStat.index}__].id}" />
+
+        <div style="display: flex; justify-content: space-between;">
+            <h3 style="margin:0">Питання №<span th:text="${qStat.index + 1}"></span></h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label>Бал:</label>
+                <input type="number" th:field="*{questions[__${qStat.index}__].points}" min="1" style="width:60px" class="q-points" onchange="updateTotalScore()">
             </div>
+        </div>
+
+        <input type="text" th:field="*{questions[__${qStat.index}__].question}" placeholder="Текст питання" required style="margin: 15px 0;">
+
+        <div th:id="'options-' + ${qStat.index}">
+            <div th:each="option, oStat : ${question.options}" class="answer-row">
+                <input type="hidden" th:field="*{questions[__${qStat.index}__].options[__${oStat.index}__].id}" />
+                <input type="checkbox" th:field="*{questions[__${qStat.index}__].options[__${oStat.index}__].correct}" class="correct-check">
+                <input type="text" th:field="*{questions[__${qStat.index}__].options[__${oStat.index}__].optionText}" placeholder="Варіант відповіді" required>
+            </div>
+        </div>
+
+        <button type="button" th:onclick="'addOption(' + ${qStat.index} + ')'" class="btn small-btn" style="background:#3498db">+ Додати відповідь</button>
+        <button type="button" th:onclick="'removeQuestion(' + ${qStat.index} + ')'" class="btn small-btn" style="background:#e74c3c">Видалити питання</button>
+    </div>
+</div>
 
             <button type="button" onclick="addQuestion()" class="btn" style="background: #27ae60;">+ Додати питання</button>
 
@@ -41,7 +71,7 @@
             <div style="display: flex; gap: 20px;">
                 <div class="form-group" style="flex: 1;">
                     <label>Дата та час початку:</label>
-                    <!-- Змінено type="time" на type="datetime-local" -->
+
                     <input type="datetime-local" th:field="*{startTime}" required />
                 </div>
                 <div class="form-group" style="flex: 1;">
@@ -52,88 +82,68 @@
 
             <div style="margin-top: 30px; text-align: center;">
                 <button type="submit" class="btn">Зберегти тест</button>
-                <a th:href="@{/teacher/course/{id}(id=${test.course.id})}" class="btn" style="background:#95a5a6;">Скасувати</a>
+                <a th:href="${isAdmin ? '/admin/dashboard' : '/teacher/course/' + test.course.id}"
+                class="btn" style="background:#95a5a6;">Скасувати</a>
             </div>
         </form>
     </div>
 
-    <script>
-        let qCount = 0;
+    <script th:inline="javascript">
+    let qCount = /*[[${test.questions != null ? test.questions.size() : 0}]]*/ 0;
 
-        function addQuestion() {
-            const container = document.getElementById('questionsContainer');
-            const qIdx = qCount++;
-            const html = `
-                <div class="question-block" id="q-block-${qIdx}">
-                    <div style="display: flex; justify-content: space-between;">
-                        <h3 style="margin:0">Питання №${qIdx + 1}</h3>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <label>Бал:</label>
-                            <input type="number" name="questions[${qIdx}].points" value="1" min="1" style="width:60px" class="q-points" onchange="updateTotalScore()">
-                        </div>
+    function addQuestion() {
+        const container = document.getElementById('questionsContainer');
+        const qIdx = qCount++;
+        const html = `
+            <div class="question-block" id="q-block-${qIdx}">
+                <div style="display: flex; justify-content: space-between;">
+                    <h3 style="margin:0">Питання №${qIdx + 1}</h3>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label>Бал:</label>
+                        <input type="number" name="questions[${qIdx}].points" value="1" min="1" style="width:60px" class="q-points" onchange="updateTotalScore()">
                     </div>
-                    
-                    <input type="text" name="questions[${qIdx}].question" placeholder="Текст питання" required style="margin: 15px 0;">
-                    
-                    <div id="q-type-${qIdx}" class="type-info none">Оберіть правильну відповідь</div>
-                    
-                    <div id="options-${qIdx}"></div>
-                    
-                    <button type="button" onclick="addOption(${qIdx})" class="btn small-btn" style="background:#3498db">+ Додати відповідь</button>
-                    <button type="button" onclick="removeQuestion(${qIdx})" class="btn small-btn" style="background:#e74c3c">Видалити питання</button>
                 </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-            addOption(qIdx);
-            updateTotalScore();
-        }
+                <input type="text" name="questions[${qIdx}].question" placeholder="Текст питання" required style="margin: 15px 0;">
+                <div id="options-${qIdx}"></div>
+                <button type="button" onclick="addOption(${qIdx})" class="btn small-btn" style="background:#3498db">+ Додати відповідь</button>
+                <button type="button" onclick="removeQuestion(${qIdx})" class="btn small-btn" style="background:#e74c3c">Видалити питання</button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        addOption(qIdx);
+        updateTotalScore();
+    }
 
-        function addOption(qIdx) {
-            const container = document.getElementById(`options-${qIdx}`);
-            const oIdx = container.children.length;
-            const html = `
-                <div class="answer-row">
-                    <input type="checkbox" name="questions[${qIdx}].options[${oIdx}].isCorrect" onchange="checkType(${qIdx})" class="correct-check">
-                    <input type="text" name="questions[${qIdx}].options[${oIdx}].optionText" placeholder="Варіант відповіді" required>
-                    <button type="button" onclick="this.parentElement.remove(); checkType(${qIdx});" class="btn small-btn" style="background:#bdc3c7">×</button>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-            checkType(qIdx);
-        }
+    function addOption(qIdx) {
+    const container = document.getElementById(`options-${qIdx}`);
+    const oIdx = container.querySelectorAll('.answer-row').length;
+    const html = `
+        <div class="answer-row">
+            <input type="checkbox" name="questions[${qIdx}].options[${oIdx}].correct" class="correct-check">
+            <input type="text" name="questions[${qIdx}].options[${oIdx}].optionText" placeholder="Варіант відповіді" required>
+            <button type="button" onclick="this.parentElement.remove();" class="btn small-btn" style="background:#bdc3c7">×</button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+}
 
-        function checkType(qIdx) {
-            const block = document.getElementById(`q-block-${qIdx}`);
-            const typeLabel = document.getElementById(`q-type-${qIdx}`);
-            const checkedCount = block.querySelectorAll('.correct-check:checked').length;
+    function removeQuestion(qIdx) {
+        document.getElementById(`q-block-${qIdx}`).remove();
+        updateTotalScore();
+    }
 
-            if (checkedCount === 0) {
-                typeLabel.innerText = "⚠️ Немає правильних відповідей";
-                typeLabel.className = "type-info none";
-            } else if (checkedCount === 1) {
-                typeLabel.innerText = "✓ Питання з однією відповіддю";
-                typeLabel.className = "type-info single";
-            } else {
-                typeLabel.innerText = "✓ Питання з кількома відповідями";
-                typeLabel.className = "type-info multi";
-            }
-        }
+    function updateTotalScore() {
+        let total = 0;
+        document.querySelectorAll('.q-points').forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        document.getElementById('totalScore').innerText = total;
+    }
 
-        function removeQuestion(qIdx) {
-            document.getElementById(`q-block-${qIdx}`).remove();
-            updateTotalScore();
-        }
-
-        function updateTotalScore() {
-            let total = 0;
-            document.querySelectorAll('.q-points').forEach(input => {
-                total += parseInt(input.value) || 0;
-            });
-            document.getElementById('totalScore').innerText = total;
-        }
-
-        // Авто-додавання першого питання
-        window.onload = addQuestion;
-    </script>
+    window.onload = function() {
+        if (qCount === 0) addQuestion();
+        updateTotalScore();
+    };
+</script>
 </body>
 </html>

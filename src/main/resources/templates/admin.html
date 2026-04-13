@@ -116,7 +116,7 @@
                 <thead><tr><th>ID</th><th>Назва</th><th>Курс</th><th>Дії</th></tr></thead>
                 <tbody>
                     <tr th:each="l : ${lectures}">
-                        <td th:text="${l.id}"></td><td th:text="${l.title}"></td><td th:text="${l.course.name}"></td>
+                        <td th:text="${l.id}"></td><td th:text="${l.title}"></td><td th:text="${l.course != null ? l.course.name : 'Без курсу'}"></td>
                         <td>
                             <a th:href="@{/admin/lecture/edit/{id}(id=${l.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/lecture/delete/{id}(id=${l.id})}" method="post">
@@ -139,7 +139,9 @@
                             <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}"></option>
                         </select>
                     </div>
-                    <div><label>Фінальний?</label><input type="checkbox" name="isFinal"></div>
+                    <div><label>Фінальний?</label>
+                        <input type="checkbox" name="isFinal" value="true">
+                    </div>
                     <button type="submit" class="btn">Створити</button>
                 </form>
             </div>
@@ -147,9 +149,10 @@
                 <thead><tr><th>ID</th><th>Назва</th><th>Курс</th><th>Тип</th><th>Дії</th></tr></thead>
                 <tbody>
                     <tr th:each="t : ${tests}">
-                        <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course.name}"></td>
+                        <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course != null ? t.course.name : 'Без курсу'}"></td>
                         <td th:text="${t.finalTest ? 'Фінальний' : 'Звичайний'}"></td>
                         <td>
+                            <a th:href="@{/admin/test/{testId}/question/add(testId=${t.id})}" class="btn small-btn" style="background:#34495e;">+ Питання</a>
                             <a th:href="@{/admin/test/edit/{id}(id=${t.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
@@ -166,7 +169,8 @@
                 <thead><tr><th>Тест</th><th>Питання</th><th>Правильна</th><th>Бали</th><th>Дії</th></tr></thead>
                 <tbody>
                     <tr th:each="q : ${questions}">
-                        <td th:text="${q.test.title}"></td><td th:text="${q.question}"></td>
+                        <td th:text="${q.test != null ? q.test.title : 'Без тесту'}"></td>
+                        <td th:text="${q.question}"></td>
                         <td th:text="${q.correctAnswer}"></td><td th:text="${q.points}"></td>
                         <td>
                             <a th:href="@{/admin/question/edit/{id}(id=${q.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
@@ -186,7 +190,7 @@
                 <thead><tr><th>ID</th><th>Студент</th><th>Курс</th><th>Статус</th><th>Дії</th></tr></thead>
                 <tbody>
                     <tr th:each="e : ${enrollments}">
-                        <td th:text="${e.id}"></td><td th:text="${e.student.username}"></td><td th:text="${e.course.name}"></td>
+                        <td th:text="${e.id}"></td><td th:text="${e.student != null ? e.student.username : 'Видалений користувач'}"></td><td th:text="${e.course != null ? e.course.name : 'Видалений курс'}"></td>
                         <td th:text="${e.confirmed ? 'Підтверджено' : 'Очікує'}"></td>
                         <td>
                             <form th:if="${!e.confirmed}" th:action="@{/admin/enrollment/confirm/{id}(id=${e.id})}" method="post" style="display:inline;">
@@ -205,7 +209,7 @@
                 <thead><tr><th>Студент</th><th>Тест</th><th>Бал</th><th>Дії</th></tr></thead>
                 <tbody>
                     <tr th:each="r : ${results}">
-                        <td th:text="${r.student.username}"></td><td th:text="${r.test.title}"></td><td th:text="${r.score}"></td>
+                        <td th:text="${r.student != null ? r.student.username : 'Видалений користувач'}"></td><td th:text="${r.test != null ? r.test.title : 'Видалений тест'}"></td><td th:text="${r.score}"></td>
                         <td>
                             <form th:action="@{/admin/result/delete/{id}(id=${r.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>

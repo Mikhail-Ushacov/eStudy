@@ -158,6 +158,36 @@ public class TeacherController {
         Test test = testRepository.findById(testId).orElseThrow();
         checkCourseOwnership(test.getCourse().getId(), principal);
         question.setTest(test);
+        
+        if (question.getOptionA() != null && !question.getOptionA().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionA());
+            opt.setCorrect("A".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        if (question.getOptionB() != null && !question.getOptionB().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionB());
+            opt.setCorrect("B".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        if (question.getOptionC() != null && !question.getOptionC().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionC());
+            opt.setCorrect("C".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        if (question.getOptionD() != null && !question.getOptionD().isEmpty()) {
+            AnswerOption opt = new AnswerOption();
+            opt.setOptionText(question.getOptionD());
+            opt.setCorrect("D".equals(question.getCorrectAnswer()));
+            opt.setQuestion(question);
+            question.getOptions().add(opt);
+        }
+        
         questionRepository.save(question); 
         return "redirect:/teacher/course/" + test.getCourse().getId();
     }
