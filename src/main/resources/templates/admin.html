@@ -148,7 +148,7 @@
                 <tbody>
                     <tr th:each="t : ${tests}">
                         <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course.name}"></td>
-                        <td th:text="${t.isFinal ? 'Фінальний' : 'Звичайний'}"></td>
+                        <td th:text="${t.finalTest ? 'Фінальний' : 'Звичайний'}"></td>
                         <td>
                             <a th:href="@{/admin/test/edit/{id}(id=${t.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post">

@@ -33,4 +33,7 @@ public class Question {
     public void setTest(Test test) { this.test = test; }
     public List<AnswerOption> getOptions() { return options; }
     public void setOptions(List<AnswerOption> options) { this.options = options; }
+    private String correctAnswer;
+    public String getCorrectAnswer() { return correctAnswer; }
+    public void setCorrectAnswer(String correctAnswer) { this.correctAnswer = correctAnswer; }
 }
