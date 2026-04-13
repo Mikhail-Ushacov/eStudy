@@ -89,7 +89,7 @@
                     <a th:unless="${completedTestIds != null and completedTestIds.contains(test.id)}" th:href="@{/tests/{id}(id=${test.id})}" class="btn small-btn">Пройти</a>
                 </span>
                 <span sec:authorize="hasRole('TEACHER')">
-                    <a th:href="@{/teacher/test/{testId}/question/add(testId=${test.id})}" class="btn small-btn" style="background: #34495e;">+ Питання</a>
+                    <a th:href="@{/teacher/test/edit/{id}(id=${test.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                     <form th:action="@{/teacher/test/delete/{testId}(testId=${test.id})}" method="post" style="display:inline;">
                         <button type="submit" class="btn small-btn" style="background-color: #e74c3c;">Видалити</button>
                     </form>

@@ -24,6 +24,7 @@ public class Test {
     @Column(columnDefinition = "TEXT")
     private String description;
     
+    @Column(name = "final_test", nullable = false)
     private boolean finalTest = false;
 
     @ManyToOne(fetch = FetchType.LAZY)

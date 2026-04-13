@@ -152,7 +152,6 @@
                         <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course != null ? t.course.name : 'Без курсу'}"></td>
                         <td th:text="${t.finalTest ? 'Фінальний' : 'Звичайний'}"></td>
                         <td>
-                            <a th:href="@{/admin/test/{testId}/question/add(testId=${t.id})}" class="btn small-btn" style="background:#34495e;">+ Питання</a>
                             <a th:href="@{/admin/test/edit/{id}(id=${t.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                             <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>

@@ -200,4 +200,13 @@ public class TeacherController {
         enrollmentRepository.save(e);
         return "redirect:/teacher/course/" + e.getCourse().getId();
     }
+
+    @GetMapping("/test/edit/{id}")
+    public String showEditTestForm(@PathVariable Long id, Model model, Principal principal) {
+        Test test = testRepository.findById(id).orElseThrow();
+        checkCourseOwnership(test.getCourse().getId(), principal);
+        model.addAttribute("test", test);
+        model.addAttribute("isAdmin", false);
+        return "add-test";
+    }
 }
