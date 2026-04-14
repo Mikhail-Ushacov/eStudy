@@ -78,16 +78,29 @@
         <div th:each="test : ${tests}" class="list-item">
             <span class="list-item-title">
                 <span th:text="${test.title}"></span>
+                <small th:if="${test.finalTest}" id="final-badge" style="background: #e67e22; color: white; padding: 2px 5px; border-radius: 3px; margin-left: 10px;">ФІНАЛЬНИЙ</small>
                 <small style="display: block; color: #666;">
                     Доступно з: <span th:text="${#temporals.format(test.startTime, 'dd.MM.yyyy HH:mm')}"></span> 
                     по: <span th:text="${#temporals.format(test.endTime, 'dd.MM.yyyy HH:mm')}"></span>
                 </small>
             </span>
             <div class="list-item-actions">
+                <span sec:authorize="hasRole('TEACHER')" style="margin-right: 15px; border-right: 1px solid #ddd; padding-right: 15px;">
+                    <label style="display: inline; font-weight: normal; font-size: 0.9em; cursor: pointer;">
+                        <input type="checkbox" 
+                            class="final-test-checkbox" 
+                            th:data-id="${test.id}" 
+                            th:checked="${test.finalTest}"
+                            onchange="updateFinalStatus(this)"> 
+                        Фінальний іспит
+                    </label>
+                </span>
+
                 <span sec:authorize="hasRole('STUDENT')">
                     <span th:if="${completedTestIds != null and completedTestIds.contains(test.id)}" style="color: #27ae60; font-weight: bold;">Пройдено</span>
                     <a th:unless="${completedTestIds != null and completedTestIds.contains(test.id)}" th:href="@{/tests/{id}(id=${test.id})}" class="btn small-btn">Пройти</a>
                 </span>
+
                 <span sec:authorize="hasRole('TEACHER')">
                     <a th:href="@{/teacher/test/edit/{id}(id=${test.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
                     <form th:action="@{/teacher/test/delete/{testId}(testId=${test.id})}" method="post" style="display:inline;">
@@ -101,7 +114,13 @@
         <div sec:authorize="hasRole('TEACHER')" style="margin-top: 40px;">
             <h2 class="section-title">Студенти на курсі</h2>
             <table th:if="${enrollments != null and !enrollments.isEmpty()}">
-                <thead><tr><th>Студент</th><th>Результати тестів</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Студент</th>
+                        <th>Всі результати</th>
+                        <th>Оцінка за курс (Final)</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr th:each="enroll : ${enrollments}">
                         <td th:text="${enroll.student.username}"></td>
@@ -112,10 +131,60 @@
                                 </li>
                             </ul>
                         </td>
+                        <td style="background-color: #fcfcfc;">
+                            <div th:each="res : ${courseTestResults}" 
+                                th:if="${res.student.id == enroll.student.id and res.test.finalTest}">
+                                <strong style="font-size: 1.1em; color: #27ae60;" th:text="${res.score} + ' б.'"></strong>
+                            </div>
+
+                            <!-- Перевірка через Selection syntax, чи є хоча б один результат фінального тесту для цього студента -->
+                            <span th:if="${courseTestResults.?[student.id == __${enroll.student.id}__ and test.finalTest].isEmpty()}" 
+                                style="color: #e74c3c; font-size: 0.85em;">
+                                Ще не пройдено
+                            </span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
+
+        <script>
+        function updateFinalStatus(checkbox) {
+            const testId = checkbox.getAttribute('data-id');
+            const isChecked = checkbox.checked;
+
+            if (isChecked) {
+                // Показуємо попередження (Messagebox)
+                const confirmChange = confirm("Ви робите цей тест фінальним. Тільки один тест у курсі може бути фінальним. Статус попереднього фінального тесту (якщо він був) буде скасовано. Продовжити?");
+                
+                if (!confirmChange) {
+                    checkbox.checked = false;
+                    return;
+                }
+            }
+
+            // Відправляємо дані на сервер
+            const formData = new FormData();
+            formData.append('isFinal', isChecked);
+
+            fetch(`/teacher/test/${testId}/set-final`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Перевантажуємо сторінку, щоб оновити всі чекбокси та бейджі
+                    window.location.reload();
+                } else {
+                    alert("Помилка при збереженні статусу.");
+                    checkbox.checked = !isChecked;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Сталася помилка зв'язку з сервером.");
+            });
+        }
+        </script>
 </body>
 </html>

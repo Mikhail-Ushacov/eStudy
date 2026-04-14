@@ -11,7 +11,6 @@
 
         <nav>
             <a href="/courses">Головна</a>
-            <a href="/student/dashboard">Мій кабінет</a>
             <a href="/logout">Вийти</a>
         </nav>
 
@@ -22,20 +21,43 @@
         <hr>
 
         <!-- 1. МОЇ ПІДТВЕРДЖЕНІ КУРСИ -->
-        <h2 class="section-title">Моє навчання (Підтверджені курси)</h2>
+        <h2 class="section-title">Мої курси</h2>
         <div th:if="${enrollments.isEmpty()}">
             <p>Ви ще не зараховані на жоден курс.</p>
         </div>
-        <div th:each="enroll : ${enrollments}" class="course-item">
-            <div class="course-details">
-                <h3 th:text="${enroll.course.name}"></h3>
-                <p>Викладач: <span th:text="${enroll.course.teacher.username}"></span></p>
-            </div>
-            <div class="course-actions">
-                <!-- Пряме посилання на сторінку з лекціями та тестами -->
-                <a th:href="@{/student/course/{id}(id=${enroll.course.id})}" class="btn">Перейти до матеріалів</a>
-            </div>
-        </div>
+        <table th:unless="${enrollments.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>Назва курсу</th>
+                    <th>Викладач</th>
+                    <th>Підсумкова оцінка</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="enroll : ${enrollments}">
+                    <td th:text="${enroll.course.name}"></td>
+                    <td th:text="${enroll.course.teacher.username}"></td>
+                    <td>
+                        <!-- Показуємо оцінку, якщо такий результат існує -->
+                        <div th:each="res : ${results}" 
+                            th:if="${res.test.course.id == enroll.course.id and res.test.finalTest}">
+                            <strong style="color: #2ecc71;" th:text="${res.score} + ' б.'"></strong>
+                        </div>
+
+                        <!-- Показуємо "Не складено", якщо фільтр результатів повертає порожній список -->
+                        <!-- Синтаксис .?[] фільтрує колекцію results за умовами всередині дужок -->
+                        <span th:if="${results.?[test.course.id == __${enroll.course.id}__ and test.finalTest].isEmpty()}" 
+                            style="color: #95a5a6; font-style: italic;">
+                            Не складено
+                        </span>
+                    </td>
+                    <td>
+                        <a th:href="@{/student/course/{id}(id=${enroll.course.id})}" class="btn small-btn">Матеріали</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <!-- 2. ЗАЯВКИ НА РОЗГЛЯДІ -->
         <div th:if="${pendingEnrollments != null and !pendingEnrollments.isEmpty()}">

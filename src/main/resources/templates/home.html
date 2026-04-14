@@ -13,13 +13,12 @@
             <a href="/">Головна</a>
             <span sec:authorize="!isAuthenticated()"><a href="/login">Вхід</a></span>
             <span sec:authorize="!isAuthenticated()"><a href="/register">Реєстрація</a></span>
-            <span sec:authorize="hasRole('STUDENT')"><a href="/student/dashboard">Мій кабінет студента</a></span>
-            <span sec:authorize="hasRole('TEACHER')"><a href="/teacher/dashboard">Мій кабінет викладача</a></span>
-            <span sec:authorize="hasRole('ADMIN')"><a href="/admin/dashboard">Панель адміністратора</a></span>
+            <span sec:authorize="hasRole('STUDENT')"><a href="/student/dashboard">Мій кабінет</a></span>
+            <span sec:authorize="hasRole('TEACHER')"><a href="/teacher/dashboard">Мій кабінет</a></span>
             <span sec:authorize="isAuthenticated()"><a href="/logout">Вийти</a></span>
         </nav>
 
-        <h2 class="section-title">Доступні курси</h2>
+        <h2 class="section-title">Мої курси</h2>
 
         <div th:if="${courses.isEmpty()}">
             <p>Наразі немає доступних курсів.</p>

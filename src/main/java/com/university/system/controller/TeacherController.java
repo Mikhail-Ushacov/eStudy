@@ -66,17 +66,19 @@ public class TeacherController {
         checkCourseOwnership(courseId, principal);
         Course course = courseService.getCourseById(courseId).orElseThrow();
         
+        model.addAttribute("course", course);
         model.addAttribute("enrollments", enrollmentRepository.findByCourseIdAndConfirmed(courseId, true));
-        model.addAttribute("pendingRequests", enrollmentRepository.findByCourseIdAndConfirmed(courseId, false));
         
+        // Отримуємо результати всіх тестів цього курсу
         List<Result> courseResults = resultRepository.findAll().stream()
                 .filter(r -> r.getTest().getCourse().getId().equals(courseId))
                 .collect(Collectors.toList());
         model.addAttribute("courseTestResults", courseResults);
         
-        model.addAttribute("course", course);
         model.addAttribute("lectures", lectureRepository.findByCourseId(courseId));
         model.addAttribute("tests", testRepository.findByCourseId(courseId));
+        model.addAttribute("pendingRequests", enrollmentRepository.findByCourseIdAndConfirmed(courseId, false));
+        
         return "course";
     }
 
@@ -113,6 +115,7 @@ public class TeacherController {
         Test test = new Test();
         test.setCourse(courseService.getCourseById(courseId).orElseThrow());
         model.addAttribute("test", test);
+        model.addAttribute("isAdmin", false); // <-- ДОДАЙТЕ ЦЕЙ РЯДОК
         return "add-test";
     }
 
@@ -208,5 +211,28 @@ public class TeacherController {
         model.addAttribute("test", test);
         model.addAttribute("isAdmin", false);
         return "add-test";
+    }
+
+    @PostMapping("/test/{testId}/set-final")
+    @ResponseBody // Повертаємо JSON/текст, а не сторінку
+    public String setFinalTest(@PathVariable Long testId, @RequestParam boolean isFinal, Principal principal) {
+        Test currentTest = testRepository.findById(testId).orElseThrow();
+        checkCourseOwnership(currentTest.getCourse().getId(), principal);
+
+        if (isFinal) {
+            // Знаходимо всі тести цього курсу, які вже позначені як фінальні
+            List<Test> finalTests = testRepository.findByCourseIdAndFinalTest(currentTest.getCourse().getId(), true);
+            
+            // Знімаємо позначку з усіх інших
+            for (Test t : finalTests) {
+                t.setFinalTest(false);
+                testRepository.save(t);
+            }
+        }
+
+        currentTest.setFinalTest(isFinal);
+        testRepository.save(currentTest);
+
+        return "Оновлено";
     }
 }

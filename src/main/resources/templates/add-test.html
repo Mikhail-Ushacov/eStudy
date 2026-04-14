@@ -20,9 +20,9 @@
             <span>Загальний бал: <strong id="totalScore">0</strong></span>
         </div>
 
-        <form th:action="${isAdmin ? '/admin/test/save' : '/teacher/course/' + test.course.id + '/test/add'}"
-      th:object="${test}"
-      method="post">
+    <form th:action="${isAdmin == true ? '/admin/test/save' : '/teacher/course/' + test.course.id + '/test/add'}"
+    th:object="${test}"
+    method="post">
 
     <input type="hidden" th:field="*{id}" />
 
