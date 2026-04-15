@@ -139,7 +139,8 @@
                             <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}"></option>
                         </select>
                     </div>
-                    <div><label>Фінальний?</label>
+                    <div>
+                        <label>Фінальний?</label>
                         <input type="checkbox" name="isFinal" value="true">
                     </div>
                     <button type="submit" class="btn">Створити</button>
@@ -149,11 +150,21 @@
                 <thead><tr><th>ID</th><th>Назва</th><th>Курс</th><th>Тип</th><th>Дії</th></tr></thead>
                 <tbody>
                     <tr th:each="t : ${tests}">
-                        <td th:text="${t.id}"></td><td th:text="${t.title}"></td><td th:text="${t.course != null ? t.course.name : 'Без курсу'}"></td>
+                        <td th:text="${t.id}"></td>
+                        <td th:text="${t.title}"></td>
+                        <td th:text="${t.course != null ? t.course.name : 'Без курсу'}"></td>
                         <td th:text="${t.finalTest ? 'Фінальний' : 'Звичайний'}"></td>
                         <td>
+                            <!-- НОВИЙ ЧЕКБОКС -->
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.85em;">
+                                <input type="checkbox" 
+                                    th:checked="${t.finalTest}" 
+                                    th:onchange="'toggleFinalAdmin(' + ${t.id} + ', this.checked)'">
+                                Фінальний
+                            </label>
+
                             <a th:href="@{/admin/test/edit/{id}(id=${t.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
-                            <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post">
+                            <form th:action="@{/admin/test/delete/{id}(id=${t.id})}" method="post" style="display:inline;">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>
                         </td>
@@ -217,6 +228,37 @@
                     </tr>
                 </tbody>
             </table>
+            <h3 style="margin-top:40px;">Підсумкові оцінки</h3>
+            <table class="display datatable">
+                <thead>
+                    <tr>
+                        <th>Назва курсу</th>
+                        <th>Викладач</th>
+                        <th>Студент</th>
+                        <th>Оцінка за курс (Final)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="e : ${enrollments}" th:if="${e.confirmed}">
+                        <td th:text="${e.course.name}"></td>
+                        <td th:text="${e.course.teacher != null ? e.course.teacher.username : 'Не призначено'}"></td>
+                        <td th:text="${e.student.username}"></td>
+                        <td>
+                            <!-- Шукаємо результат у списку results, де співпадає студент, курс і тест позначений як фінальний -->
+                            <div th:each="r : ${results}" 
+                                th:if="${r.student.id == e.student.id and r.test.course.id == e.course.id and r.test.finalTest}">
+                                <strong style="color: #27ae60; font-size: 1.1em;" th:text="${r.score} + ' б.'"></strong>
+                            </div>
+                            
+                            <!-- Якщо фінальний тест ще не складено -->
+                            <span th:if="${results.?[student.id == __${e.student.id}__ and test.course.id == __${e.course.id}__ and test.finalTest].isEmpty()}" 
+                                style="color: #95a5a6; font-style: italic;">
+                                Ще не складено
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
     </div>
@@ -238,6 +280,33 @@
             $('.tab-btn').removeClass('active');
             $('#' + tabId).addClass('active');
             $(event.currentTarget).addClass('active');
+        }
+    </script>
+
+    <script>
+        function toggleFinalAdmin(testId, isChecked) {
+            if (isChecked) {
+                if (!confirm("Ви робите цей тест фінальним. Тільки один тест у курсі може бути фінальним. Статус попереднього фінального тесту (якщо він був) буде скасовано. Продовжити?")) {
+                    event.target.checked = false;
+                    return;
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('isFinal', isChecked);
+
+            fetch(`/admin/test/${testId}/set-final`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload(); // Перезавантажуємо для оновлення статусів у таблиці
+                } else {
+                    alert("Помилка при оновленні статусу.");
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
     </script>
 </body>

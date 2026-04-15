@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
@@ -149,34 +150,49 @@ public class AdminController {
     }
 
     @PostMapping("/test/save")
-public String saveTest(@ModelAttribute Test test, 
-                    @RequestParam(required = false) Long courseId, 
-                    @RequestParam(required = false) Boolean isFinal) {
-    
-    if (courseId != null) {
-        test.setCourse(courseService.getCourseById(courseId).orElseThrow());
-    }
-    
-    if (isFinal != null) {
-        test.setFinalTest(isFinal);
-    }
-    
-    if (test.getQuestions() != null) {
-        test.getQuestions().removeIf(q -> q.getQuestion() == null || q.getQuestion().trim().isEmpty());
+    public String saveTest(@ModelAttribute Test test, 
+                        @RequestParam(required = false) Long courseId, 
+                        @RequestParam(required = false) Boolean isFinal) {
         
-        for (Question q : test.getQuestions()) {
-            q.setTest(test);
-            if (q.getOptions() != null) {
-                for (AnswerOption opt : q.getOptions()) {
-                    opt.setQuestion(q);
+        if (courseId != null) {
+            test.setCourse(courseService.getCourseById(courseId).orElseThrow());
+        }
+        
+        // Встановлюємо статус: якщо checkbox не відмічений, isFinal буде null або false
+        boolean finalStatus = (isFinal != null && isFinal);
+        test.setFinalTest(finalStatus);
+        
+        // --- ЛОГІКА ПЕРЕВІРКИ: Тільки один фінальний тест на курс ---
+        if (finalStatus && test.getCourse() != null) {
+            // Шукаємо всі тести цього курсу, які вже позначені як фінальні
+            List<Test> existingFinals = testRepository.findByCourseIdAndFinalTest(test.getCourse().getId(), true);
+            
+            for (Test t : existingFinals) {
+                // Якщо ми створюємо новий тест або редагуємо інший — знімаємо прапорець зі старого
+                if (test.getId() == null || !t.getId().equals(test.getId())) {
+                    t.setFinalTest(false);
+                    testRepository.save(t);
                 }
             }
         }
+        // ---------------------------------------------------------
+        
+        if (test.getQuestions() != null) {
+            test.getQuestions().removeIf(q -> q.getQuestion() == null || q.getQuestion().trim().isEmpty());
+            
+            for (Question q : test.getQuestions()) {
+                q.setTest(test);
+                if (q.getOptions() != null) {
+                    for (AnswerOption opt : q.getOptions()) {
+                        opt.setQuestion(q);
+                    }
+                }
+            }
+        }
+        
+        testRepository.save(test);
+        return "redirect:/admin/dashboard";
     }
-    
-    testRepository.save(test);
-    return "redirect:/admin/dashboard";
-}
 
     @PostMapping("/test/delete/{id}")
     public String deleteTest(@PathVariable Long id) {
@@ -270,5 +286,28 @@ public String saveTest(@ModelAttribute Test test,
     public String deleteResult(@PathVariable Long id) {
         resultRepository.deleteById(id);
         return "redirect:/admin/dashboard";
+    }
+
+    // Додайте цей метод у AdminController.java
+
+    @PostMapping("/test/{testId}/set-final")
+    @ResponseBody
+    public String setFinalTest(@PathVariable Long testId, @RequestParam boolean isFinal) {
+        Test currentTest = testRepository.findById(testId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid test Id:" + testId));
+
+        if (isFinal && currentTest.getCourse() != null) {
+            // Знаходимо всі фінальні тести цього курсу та знімаємо позначку (може бути лише один)
+            List<Test> finalTests = testRepository.findByCourseIdAndFinalTest(currentTest.getCourse().getId(), true);
+            for (Test t : finalTests) {
+                t.setFinalTest(false);
+                testRepository.save(t);
+            }
+        }
+
+        currentTest.setFinalTest(isFinal);
+        testRepository.save(currentTest);
+
+        return "Оновлено";
     }
 }
