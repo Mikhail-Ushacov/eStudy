@@ -139,10 +139,6 @@
                             <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}"></option>
                         </select>
                     </div>
-                    <div>
-                        <label>Фінальний?</label>
-                        <input type="checkbox" name="isFinal" value="true">
-                    </div>
                     <button type="submit" class="btn">Створити</button>
                 </form>
             </div>
