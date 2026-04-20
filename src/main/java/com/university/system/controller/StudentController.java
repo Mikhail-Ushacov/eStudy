@@ -6,6 +6,7 @@ import com.university.system.model.User;
 import com.university.system.repository.EnrollmentRepository;
 import com.university.system.repository.ResultRepository;
 import com.university.system.repository.UserRepository;
+import com.university.system.model.Result;
 import com.university.system.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -58,23 +59,33 @@ public class StudentController {
     }
 
     @GetMapping("/course/{courseId}")
-    public String viewStudentCourse(@PathVariable Long courseId, Model model, Principal principal) {
-        User student = userRepo.findByUsername(principal.getName());
-        Enrollment enrollment = enrollmentRepo.findByStudentIdAndCourseId(student.getId(), courseId);
+public String viewStudentCourse(@PathVariable Long courseId, Model model, Principal principal) {
+    User student = userRepo.findByUsername(principal.getName());
+    Enrollment enrollment = enrollmentRepo.findByStudentIdAndCourseId(student.getId(), courseId);
 
-        if (enrollment == null || !enrollment.isConfirmed()) {
-            return "redirect:/student/dashboard?error=access_denied";
-        }
-
-        Course course = enrollment.getCourse();
-        model.addAttribute("course", course);
-        model.addAttribute("lectures", course.getLectures());
-        model.addAttribute("tests", course.getTests());
-        
-        List<Long> completedTestIds = resultRepo.findByStudentIdWithTestAndCourse(student.getId()).stream()
-                .map(r -> r.getTest().getId()).collect(Collectors.toList());
-        model.addAttribute("completedTestIds", completedTestIds);
-
-        return "course";
+    if (enrollment == null || !enrollment.isConfirmed()) {
+        return "redirect:/student/dashboard?error=access_denied";
     }
+
+    Course course = enrollment.getCourse();
+    model.addAttribute("course", course);
+    model.addAttribute("lectures", course.getLectures());
+    model.addAttribute("tests", course.getTests());
+    
+    // Отримуємо всі результати студента
+    List<Result> allResults = resultRepo.findByStudentIdWithTestAndCourse(student.getId());
+    
+    // Фільтруємо лише ті, що належать до цього курсу
+    List<Result> studentCourseResults = allResults.stream()
+            .filter(r -> r.getTest().getCourse().getId().equals(courseId))
+            .collect(Collectors.toList());
+            
+    model.addAttribute("studentResults", studentCourseResults); // Додаємо результати в модель
+
+    List<Long> completedTestIds = studentCourseResults.stream()
+            .map(r -> r.getTest().getId()).collect(Collectors.toList());
+    model.addAttribute("completedTestIds", completedTestIds);
+
+    return "course";
+}
 }

@@ -34,6 +34,15 @@ public class Test {
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
+    public int getTotalPoints() {
+        if (questions == null || questions.isEmpty()) {
+            return 0;
+        }
+        return questions.stream()
+                        .mapToInt(Question::getPoints)
+                        .sum();
+    }
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

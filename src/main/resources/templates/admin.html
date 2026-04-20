@@ -26,7 +26,6 @@
             <button class="tab-btn" onclick="openTab('courses-tab')">Курси</button>
             <button class="tab-btn" onclick="openTab('lectures-tab')">Лекції</button>
             <button class="tab-btn" onclick="openTab('tests-tab')">Тести</button>
-            <button class="tab-btn" onclick="openTab('questions-tab')">Питання</button>
             <button class="tab-btn" onclick="openTab('enrolls-tab')">Записи/Результати</button>
             <a  class="tab-btn" style="background-color: #e74c3c; color: white; text-decoration: none;" href="/logout">Вийти</a>
         </div>
@@ -169,26 +168,6 @@
             </table>
         </div>
 
-        <!-- 5. ПИТАННЯ -->
-        <div id="questions-tab" class="tab-content admin-section">
-            <table class="display datatable">
-                <thead><tr><th>Тест</th><th>Питання</th><th>Правильна</th><th>Бали</th><th>Дії</th></tr></thead>
-                <tbody>
-                    <tr th:each="q : ${questions}">
-                        <td th:text="${q.test != null ? q.test.title : 'Без тесту'}"></td>
-                        <td th:text="${q.question}"></td>
-                        <td th:text="${q.correctAnswer}"></td><td th:text="${q.points}"></td>
-                        <td>
-                            <a th:href="@{/admin/question/edit/{id}(id=${q.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
-                            <form th:action="@{/admin/question/delete/{id}(id=${q.id})}" method="post">
-                                <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
         <!-- 6. ЗАПИСИ ТА РЕЗУЛЬТАТИ -->
         <div id="enrolls-tab" class="tab-content admin-section">
             <h3>Заявки студентів</h3>
@@ -200,7 +179,7 @@
                         <td th:text="${e.confirmed ? 'Підтверджено' : 'Очікує'}"></td>
                         <td>
                             <form th:if="${!e.confirmed}" th:action="@{/admin/enrollment/confirm/{id}(id=${e.id})}" method="post" style="display:inline;">
-                                <button type="submit" class="btn small-btn">ОК</button>
+                                <button type="submit" class="btn small-btn">Підтвердити</button>
                             </form>
                             <form th:action="@{/admin/enrollment/delete/{id}(id=${e.id})}" method="post" style="display:inline;">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>

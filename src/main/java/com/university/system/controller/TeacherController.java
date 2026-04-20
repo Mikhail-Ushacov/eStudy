@@ -235,4 +235,44 @@ public class TeacherController {
 
         return "Оновлено";
     }
+
+    @GetMapping("/course/edit/{id}")
+    public String showEditCourseForm(@PathVariable Long id, Model model, Principal principal) {
+        // Перевіряємо, чи належить курс цьому викладачу
+        checkCourseOwnership(id, principal);
+        
+        Course course = courseService.getCourseById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid course Id:" + id));
+        
+        model.addAttribute("course", course);
+        model.addAttribute("isAdmin", false); // Кажемо формі, що ми НЕ адмін
+        return "add-course"; // Використовуємо ту саму форму, що й для додавання
+    }
+
+    @PostMapping("/course/edit/{id}")
+    public String updateCourse(@PathVariable Long id, @ModelAttribute Course course, Principal principal) {
+        // Перевіряємо права власності
+        checkCourseOwnership(id, principal);
+        
+        Course existingCourse = courseService.getCourseById(id).orElseThrow();
+        
+        // Оновлюємо лише дозволені поля
+        existingCourse.setName(course.getName());
+        existingCourse.setDescription(course.getDescription());
+        
+        courseService.saveCourse(existingCourse);
+        return "redirect:/teacher/dashboard";
+    }
+
+    @GetMapping("/lecture/edit/{id}")
+    public String showEditLectureForm(@PathVariable Long id, Model model, Principal principal) {
+        Lecture lecture = lectureRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid lecture Id:" + id));
+        
+        // Перевірка, чи це курс цього викладача
+        checkCourseOwnership(lecture.getCourse().getId(), principal);
+        
+        model.addAttribute("lecture", lecture);
+        return "add-lecture"; // Використовуємо існуючий шаблон
+    }
 }
