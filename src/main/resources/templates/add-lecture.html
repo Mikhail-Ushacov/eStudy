@@ -30,8 +30,11 @@
     <div class="container">
         <h1>Створення лекції для курсу: <span th:text="${lecture.course.name}"></span></h1>
 
-        <form th:action="@{/lectures/add/{courseId}(courseId=${lecture.course.id})}" 
+        <form th:action="${isAdmin == true ? '/admin/lecture/save' : '/teacher/course/' + lecture.course.id + '/lecture/add'}" 
               th:object="${lecture}" method="post" id="lectureForm">
+            
+            <input type="hidden" th:field="*{id}" />
+            <input type="hidden" name="courseId" th:value="${lecture.course.id}" />
             
             <div class="form-group">
                 <label>Заголовок лекції:</label>
@@ -46,7 +49,20 @@
             <hr>
             <h3>Зміст лекції</h3>
             <div id="sectionsContainer">
-                <!-- Розділи будуть додаватися сюди через JS -->
+                <div th:each="section, stat : ${lecture.sections}" class="section-block" th:id="'section-' + ${stat.index}">
+                    <button type="button" class="btn small-btn remove-section" th:onclick="'removeSection(' + ${stat.index} + ')'">Видалити розділ</button>
+                    
+                    <input type="hidden" th:name="'sections[' + ${stat.index} + '].id'" th:value="${section.id}" />
+                    
+                    <div class="form-group">
+                        <label>Назва розділу:</label>
+                        <input type="text" th:name="'sections[' + ${stat.index} + '].sectionTitle'" th:value="${section.sectionTitle}" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Текст розділу:</label>
+                        <textarea th:name="'sections[' + ${stat.index} + '].sectionText'" rows="4" required th:text="${section.sectionText}"></textarea>
+                    </div>
+                </div>
             </div>
 
             <button type="button" onclick="addSection()" class="btn" style="background: #27ae60;">+ Додати розділ</button>
@@ -66,54 +82,62 @@
 
             <div style="margin-top: 30px; text-align: center;">
                 <button type="submit" class="btn">Зберегти лекцію</button>
-                <a th:href="@{/teacher/course/{id}(id=${lecture.course.id})}" class="btn" style="background:#95a5a6;">Скасувати</a>
+                <a th:href="${isAdmin == true ? '/admin/dashboard' : '/teacher/course/' + lecture.course.id}" class="btn" style="background:#95a5a6;">Скасувати</a>
             </div>
         </form>
     </div>
 
-    <script>
-        let sectionCount = 0;
+    <script th:inline="javascript">
+    let sectionCount = /*[[${lecture.sections != null ? lecture.sections.size() : 0}]]*/ 0;
 
-        function addSection() {
-            const container = document.getElementById('sectionsContainer');
-            const sectionHtml = `
-                <div class="section-block" id="section-${sectionCount}">
-                    <button type="button" class="btn small-btn remove-section" onclick="removeSection(${sectionCount})">Видалити розділ</button>
-                    <div class="form-group">
-                        <label>Назва розділу:</label>
-                        <input type="text" name="sections[${sectionCount}].sectionTitle" required placeholder="Наприклад: Вступ" />
-                    </div>
-                    <div class="form-group">
-                        <label>Текст розділу:</label>
-                        <textarea name="sections[${sectionCount}].sectionText" rows="4" required placeholder="Основний контент лекції..."></textarea>
-                    </div>
+    function addSection() {
+        const container = document.getElementById('sectionsContainer');
+        const sectionHtml = `
+            <div class="section-block" id="section-${sectionCount}">
+                <button type="button" class="btn small-btn remove-section" onclick="removeSection(${sectionCount})">Видалити розділ</button>
+                <div class="form-group">
+                    <label>Назва розділу:</label>
+                    <input type="text" name="sections[${sectionCount}].sectionTitle" required placeholder="Наприклад: Вступ" />
                 </div>
-            `;
-            container.insertAdjacentHTML('beforeend', sectionHtml);
-            sectionCount++;
-        }
+                <div class="form-group">
+                    <label>Текст розділу:</label>
+                    <textarea name="sections[${sectionCount}].sectionText" rows="4" required placeholder="Основний контент лекції..."></textarea>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', sectionHtml);
+        sectionCount++;
+    }
 
-        function removeSection(id) {
-            const element = document.getElementById('section-' + id);
+    function removeSection(id) {
+        const element = document.getElementById('section-' + id);
+        if (element) {
             element.remove();
             reindexSections();
         }
+    }
 
-        // Функція для переіндексації після видалення, щоб Spring правильно зчитав List
-        function reindexSections() {
-            const sections = document.querySelectorAll('.section-block');
-            sectionCount = 0;
-            sections.forEach((section, index) => {
-                section.id = 'section-' + index;
-                section.querySelector('input').name = `sections[${index}].sectionTitle`;
-                section.querySelector('textarea').name = `sections[${index}].sectionText`;
-                section.querySelector('.remove-section').setAttribute('onclick', `removeSection(${index})`);
-                sectionCount++;
-            });
+    function reindexSections() {
+        const sections = document.querySelectorAll('.section-block');
+        sectionCount = 0;
+        sections.forEach((section, index) => {
+            section.id = 'section-' + index;
+            
+            const idInput = section.querySelector('input[type="hidden"]');
+            if (idInput) idInput.name = `sections[${index}].id`;
+            
+            section.querySelector('input[type="text"]').name = `sections[${index}].sectionTitle`;
+            section.querySelector('textarea').name = `sections[${index}].sectionText`;
+            section.querySelector('.remove-section').setAttribute('onclick', `removeSection(${index})`);
+            sectionCount++;
+        });
+    }
+
+    window.onload = function() {
+        if (sectionCount === 0) {
+            addSection();
         }
-
-        // Додаємо один розділ автоматично при завантаженні
-        window.onload = addSection;
-    </script>
+    };
+</script>
 </body>
 </html>

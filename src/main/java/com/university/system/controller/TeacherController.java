@@ -96,6 +96,15 @@ public class TeacherController {
     public String addLecture(@PathVariable Long courseId, @ModelAttribute Lecture lecture, Principal principal) {
         checkCourseOwnership(courseId, principal);
         lecture.setCourse(courseService.getCourseById(courseId).orElseThrow());
+        
+        if (lecture.getSections() != null) {
+            for (int i = 0; i < lecture.getSections().size(); i++) {
+                LectureSection section = lecture.getSections().get(i);
+                section.setLecture(lecture);
+                section.setOrderIndex(i);
+            }
+        }
+        
         lectureRepository.save(lecture);
         return "redirect:/teacher/course/" + courseId;
     }

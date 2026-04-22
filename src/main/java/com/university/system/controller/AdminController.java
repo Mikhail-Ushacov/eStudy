@@ -125,9 +125,18 @@ public class AdminController {
         return "add-lecture";
     }
 
-    @PostMapping("/lecture/save")
+     @PostMapping("/lecture/save")
     public String saveLecture(@ModelAttribute Lecture lecture, @RequestParam Long courseId) {
         lecture.setCourse(courseService.getCourseById(courseId).orElseThrow());
+        
+        if (lecture.getSections() != null) {
+            for (int i = 0; i < lecture.getSections().size(); i++) {
+                LectureSection section = lecture.getSections().get(i);
+                section.setLecture(lecture);
+                section.setOrderIndex(i);
+            }
+        }
+        
         lectureRepository.save(lecture);
         return "redirect:/admin/dashboard";
     }
