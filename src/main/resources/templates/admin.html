@@ -118,7 +118,7 @@
                         <td th:text="${l.id}"></td><td th:text="${l.title}"></td><td th:text="${l.course != null ? l.course.name : 'Без курсу'}"></td>
                         <td>
                             <a th:href="@{/admin/lecture/edit/{id}(id=${l.id})}" class="btn small-btn" style="background:#f39c12">Змінити</a>
-                            <form th:action="@{/admin/lecture/delete/{id}(id=${l.id})}" method="post">
+                            <form th:action="@{/admin/lecture/delete/{id}(id=${l.id})}" method="post" style="display:inline;">
                                 <button type="submit" class="btn small-btn" style="background:#e74c3c">Видалити</button>
                             </form>
                         </td>
